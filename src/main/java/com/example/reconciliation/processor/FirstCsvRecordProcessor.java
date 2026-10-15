@@ -52,9 +52,15 @@ public class FirstCsvRecordProcessor implements ItemProcessor<FirstCsvRecordDto,
 		if (record.getTransactionId() == null || record.getTransactionId().isBlank()) {
 			return "Transaction ID is required";
 		}
+		if (!record.getTransactionId().trim().matches("[A-Za-z0-9]+")) {
+		    return "Transaction ID must contain only letters and numbers";
+		}
 
 		if (record.getAccountNumber() == null || record.getAccountNumber().isBlank()) {
 			return "Account number is required";
+		}
+		if (!record.getAccountNumber().trim().matches("[A-Za-z0-9]{8}")) {
+		    return "Account number must contain exactly 8 letters or digits";
 		}
 
 		if (record.getTransactionDate() == null || record.getTransactionDate().isBlank()) {
@@ -67,6 +73,9 @@ public class FirstCsvRecordProcessor implements ItemProcessor<FirstCsvRecordDto,
 
 		if (record.getCurrency() == null || record.getCurrency().isBlank()) {
 			return "Currency is required";
+		}
+		if (!record.getCurrency().trim().matches("[A-Za-z]{3}")) {
+		    return "Currency must contain exactly 3 letters";
 		}
 
 		if (record.getTransactionType() == null || record.getTransactionType().isBlank()) {

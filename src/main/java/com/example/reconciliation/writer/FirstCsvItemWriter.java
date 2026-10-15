@@ -21,13 +21,20 @@ import com.example.reconciliation.repository.TransactionRepository;
 
 import lombok.RequiredArgsConstructor;
 
-@RequiredArgsConstructor
 @Component
 public class FirstCsvItemWriter implements ItemWriter<TransactionProcessingResultDto>, StepExecutionListener {
 
 	private final TransactionRepository transactionRepository;
 	private final JdbcBatchItemWriter<TransactionRecord> jdbcBatchWriter;
 	private final ReconciliationResultsCsvWriter resultsWriter;
+
+	public FirstCsvItemWriter(TransactionRepository transactionRepository,
+			JdbcBatchItemWriter<TransactionRecord> jdbcBatchWriter, ReconciliationResultsCsvWriter resultsWriter) {
+
+		this.transactionRepository = transactionRepository;
+		this.jdbcBatchWriter = jdbcBatchWriter;
+		this.resultsWriter = resultsWriter;
+	}
 
 	private final Set<String> seenTransactionIds = new HashSet<>();
 
