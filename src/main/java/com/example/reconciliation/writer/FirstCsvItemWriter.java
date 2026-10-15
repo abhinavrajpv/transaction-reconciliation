@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.batch.core.listener.StepExecutionListener;
 import org.springframework.batch.core.step.StepExecution;
@@ -46,6 +47,14 @@ public class FirstCsvItemWriter implements ItemWriter<TransactionProcessingResul
 
 		List<TransactionRecord> validTransactions = new ArrayList<>();
 
+		Set<String> ids = chunk.getItems().stream().filter(
+				result -> result.getStatus() != RecordProcessingStatus.INVALID && result.getTransaction() != null)
+				.map(result -> result.getTransaction().getTransactionId()).collect(Collectors.toSet());
+
+		Set<String> existingIds = ids.isEmpty() ? Set.of()
+				: transactionRepository.findByTransactionIdIn(ids).stream().map(TransactionRecord::getTransactionId)
+						.collect(Collectors.toSet());
+
 		for (TransactionProcessingResultDto result : chunk) {
 
 			if (result.getStatus() == RecordProcessingStatus.INVALID) {
@@ -56,7 +65,7 @@ public class FirstCsvItemWriter implements ItemWriter<TransactionProcessingResul
 			TransactionRecord transaction = result.getTransaction();
 			String transactionId = transaction.getTransactionId();
 
-			if (!seenTransactionIds.add(transactionId) || transactionRepository.existsByTransactionId(transactionId)) {
+			if (!seenTransactionIds.add(transactionId) || existingIds.contains(transactionId)) {
 
 				result.setStatus(RecordProcessingStatus.DUPLICATE);
 				result.setMessage("Transaction ID already exists");
