@@ -61,7 +61,7 @@ public class FirstCsvRecordProcessor implements ItemProcessor<FirstCsvRecordDto,
 			return "Transaction date is required";
 		}
 
-		if (record.getAmount() == null || record.getAmount().isBlank()) {
+		if (record.getAmount() == null || record.getAmount().isBlank()) {    
 			return "Amount is required";
 		}
 
