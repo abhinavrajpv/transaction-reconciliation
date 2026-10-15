@@ -7,6 +7,7 @@ import lombok.Setter;
 @Setter
 public class FirstCsvRecordDto {
 
+	private int rowNumber;
     private String transactionId;
     private String accountNumber;
     private String transactionDate;

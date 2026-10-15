@@ -34,7 +34,7 @@ public class ReconciliationResultsCsvWriter {
 		try (BufferedWriter writer = Files.newBufferedWriter(outputPath, StandardCharsets.UTF_8,
 				StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 				CSVPrinter csvPrinter = new CSVPrinter(writer,
-						CSVFormat.DEFAULT.builder().setHeader("transaction_id", "status", "action").get())) {
+						CSVFormat.DEFAULT.builder().setHeader("row_number","transaction_id", "status", "action").get())) {
 
 		}
 	}
@@ -47,7 +47,7 @@ public class ReconciliationResultsCsvWriter {
 				StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 				CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT)) {
 
-			csvPrinter.printRecord(record.getTransactionId(), result.getStatus().name(), result.getMessage());
+			csvPrinter.printRecord(result.getOriginalRecord().getRowNumber(),record.getTransactionId(), result.getStatus().name(), result.getMessage());
 		}
 	}
 }
