@@ -12,8 +12,12 @@ import org.apache.commons.csv.CSVPrinter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import com.example.reconciliation.dto.ReconciliationResultDto;
 import com.example.reconciliation.dto.TransactionProcessingResultDto;
 
+import lombok.Getter;
+
+@Getter
 @Component
 public class ReconciliationResultsCsvWriter {
 
@@ -31,10 +35,14 @@ public class ReconciliationResultsCsvWriter {
 			Files.createDirectories(parent);
 		}
 
+		if (Files.exists(outputPath) && Files.size(outputPath) > 0) { // new
+			return;
+		}
+
 		try (BufferedWriter writer = Files.newBufferedWriter(outputPath, StandardCharsets.UTF_8,
-				StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-				CSVPrinter csvPrinter = new CSVPrinter(writer,
-						CSVFormat.DEFAULT.builder().setHeader("row_number","transaction_id", "status", "action").get())) {
+				StandardOpenOption.CREATE, StandardOpenOption.WRITE);
+				CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.builder().setHeader("row_number",
+						"transaction_id", "status", "action", "message", "expected_amount", "actual_amount").get())) {
 
 		}
 	}
@@ -47,7 +55,20 @@ public class ReconciliationResultsCsvWriter {
 				StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 				CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT)) {
 
-			csvPrinter.printRecord(result.getOriginalRecord().getRowNumber(),record.getTransactionId(), result.getStatus().name(), result.getMessage());
+			csvPrinter.printRecord(result.getOriginalRecord().getRowNumber(), record.getTransactionId(),
+					result.getStatus().name(), result.getStatus().name().equals("INVALID") ? "REJECTED" : "DUPLICATE",
+					result.getMessage(), "", "");
+		}
+	}
+
+	public synchronized void write(ReconciliationResultDto result) throws IOException {
+
+		try (BufferedWriter writer = Files.newBufferedWriter(outputPath, StandardCharsets.UTF_8,
+				StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+				CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT)) {
+
+			printer.printRecord(result.getRowNumber(), result.getTransactionId(), result.getStatus(),
+					result.getAction(), result.getMessage(), result.getExpectedAmount(), result.getActualAmount());
 		}
 	}
 }

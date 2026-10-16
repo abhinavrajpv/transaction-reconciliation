@@ -16,12 +16,26 @@ public class JdbcBatchWriterConfig {
 	public JdbcBatchItemWriter<TransactionRecord> transactionJdbcBatchWriter(DataSource dataSource) {
 
 		return new JdbcBatchItemWriterBuilder<TransactionRecord>().dataSource(dataSource).sql("""
-				INSERT INTO transaction_record
-				(transaction_id, account_number, transaction_date,
-				 amount, currency, transaction_type, description)
-				VALUES
-				(:transactionId, :accountNumber, :transactionDate,
-				 :amount, :currency, :transactionType, :description)
-				""").beanMapped().build();
+								INSERT INTO transaction_record (
+				    job_instance_id,
+				    transaction_id,
+				    account_number,
+				    transaction_date,
+				    amount,
+				    currency,
+				    transaction_type,
+				    description
+				)
+				VALUES (
+				    :jobInstanceId,
+				    :transactionId,
+				    :accountNumber,
+				    :transactionDate,
+				    :amount,
+				    :currency,
+				    :transactionType,
+				    :description
+				)
+												""").beanMapped().build();
 	}
 }

@@ -45,6 +45,7 @@ public class FirstCsvReaderConfig {
 	@Bean
 	public FlatFileItemReader<FirstCsvRecordDto> firstCsvReader(
 			@Value("${reconciliation.first-file}") String filePath) {
+	
 
 		DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer();
 		tokenizer.setDelimiter(",");

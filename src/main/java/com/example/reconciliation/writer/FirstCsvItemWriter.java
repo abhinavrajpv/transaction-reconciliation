@@ -18,8 +18,7 @@ import com.example.reconciliation.dto.TransactionProcessingResultDto;
 import com.example.reconciliation.entity.TransactionRecord;
 import com.example.reconciliation.enums.RecordProcessingStatus;
 import com.example.reconciliation.repository.TransactionRepository;
-
-import lombok.RequiredArgsConstructor;
+import com.example.reconciliation.utility.ProcessingCounters;
 
 @Component
 public class FirstCsvItemWriter implements ItemWriter<TransactionProcessingResultDto>, StepExecutionListener {
@@ -27,13 +26,16 @@ public class FirstCsvItemWriter implements ItemWriter<TransactionProcessingResul
 	private final TransactionRepository transactionRepository;
 	private final JdbcBatchItemWriter<TransactionRecord> jdbcBatchWriter;
 	private final ReconciliationResultsCsvWriter resultsWriter;
+	private final ProcessingCounters counters;
+	private Long jobInstanceId;
 
 	public FirstCsvItemWriter(TransactionRepository transactionRepository,
-			JdbcBatchItemWriter<TransactionRecord> jdbcBatchWriter, ReconciliationResultsCsvWriter resultsWriter) {
-
+			JdbcBatchItemWriter<TransactionRecord> jdbcBatchWriter, ReconciliationResultsCsvWriter resultsWriter,
+			ProcessingCounters counters) {
 		this.transactionRepository = transactionRepository;
 		this.jdbcBatchWriter = jdbcBatchWriter;
 		this.resultsWriter = resultsWriter;
+		this.counters = counters;
 	}
 
 	private final Set<String> seenTransactionIds = new HashSet<>();
@@ -41,6 +43,8 @@ public class FirstCsvItemWriter implements ItemWriter<TransactionProcessingResul
 	@Override
 	public void beforeStep(StepExecution stepExecution) {
 		seenTransactionIds.clear();
+		counters.reset();
+		this.jobInstanceId = stepExecution.getJobExecution().getJobInstance().getInstanceId();
 
 		try {
 			resultsWriter.initialize();
@@ -59,27 +63,36 @@ public class FirstCsvItemWriter implements ItemWriter<TransactionProcessingResul
 				.map(result -> result.getTransaction().getTransactionId()).collect(Collectors.toSet());
 
 		Set<String> existingIds = ids.isEmpty() ? Set.of()
-				: transactionRepository.findByTransactionIdIn(ids).stream().map(TransactionRecord::getTransactionId)
-						.collect(Collectors.toSet());
+				: transactionRepository.findByTransactionIdInAndJobInstanceId(ids, jobInstanceId).stream()
+						.map(TransactionRecord::getTransactionId).collect(Collectors.toSet());
 
 		for (TransactionProcessingResultDto result : chunk) {
+			counters.recordFirstFileRecord();
 
 			if (result.getStatus() == RecordProcessingStatus.INVALID) {
+				counters.recordInvalid();
 				resultsWriter.write(result);
 				continue;
 			}
 
 			TransactionRecord transaction = result.getTransaction();
 			String transactionId = transaction.getTransactionId();
-
+			
+			/*
+			 * if ("TXN005912".equals(transactionId)) { throw new
+			 * RuntimeException("TEST FAILURE: Step 2"); }
+			 */
+			 
 			if (!seenTransactionIds.add(transactionId) || existingIds.contains(transactionId)) {
 
 				result.setStatus(RecordProcessingStatus.DUPLICATE);
 				result.setMessage("Transaction ID already exists");
+				counters.recordDuplicate();
 				resultsWriter.write(result);
 				continue;
 			}
 
+			transaction.setJobInstanceId(jobInstanceId);
 			validTransactions.add(transaction);
 		}
 

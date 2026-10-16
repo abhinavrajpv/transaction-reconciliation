@@ -1,6 +1,8 @@
 package com.example.reconciliation.repository;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,6 +13,12 @@ public interface TransactionRepository extends JpaRepository<TransactionRecord, 
 
 	boolean existsByTransactionId(String transactionId);
 
-	List<TransactionRecord> findByTransactionIdIn(
-            Set<String> transactionIds);
+	Optional<TransactionRecord> findByTransactionId(String transactionId);
+
+	List<TransactionRecord> findByTransactionIdIn(Set<String> transactionIds);
+
+	Optional<TransactionRecord> findByTransactionIdAndJobInstanceId(String transactionId, Long jobInstanceId);
+
+	List<TransactionRecord> findByTransactionIdInAndJobInstanceId(Collection<String> transactionIds,
+			Long jobInstanceId);
 }

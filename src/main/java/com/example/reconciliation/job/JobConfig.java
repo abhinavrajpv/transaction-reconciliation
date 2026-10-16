@@ -12,10 +12,12 @@ public class JobConfig {
 
 	@Bean
 	public Job transactionReconciliationJob(JobRepository jobRepository, Step validateFirstFileStep,
-			Step ingestFirstFileStep, Step validateSecondFileStep) {
+			Step ingestFirstFileStep, Step validateSecondFileStep, Step reconcileSecondFileStep,
+			Step finalizeResultsAndAuditStep) {
 
 		return new JobBuilder("transactionReconciliationJob", jobRepository).start(validateFirstFileStep).on("FAILED")
 				.fail().from(validateFirstFileStep).on("*").to(ingestFirstFileStep).from(ingestFirstFileStep)
-				.next(validateSecondFileStep).end().build();
+				.next(validateSecondFileStep).on("FAILED").fail().from(validateSecondFileStep).on("*")
+				.to(reconcileSecondFileStep).from(reconcileSecondFileStep).next(finalizeResultsAndAuditStep).end().build();
 	}
-} 
+}

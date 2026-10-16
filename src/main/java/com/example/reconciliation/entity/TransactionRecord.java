@@ -15,7 +15,8 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "transaction_record", uniqueConstraints = @UniqueConstraint(name = "uk_transaction_id", columnNames = "transaction_id"))
+@Table(name = "transaction_record", uniqueConstraints = @UniqueConstraint(name = "uk_transaction_instance", columnNames = {
+		"transaction_id", "job_instance_id" }))
 @Getter
 @Setter
 public class TransactionRecord {
@@ -24,7 +25,10 @@ public class TransactionRecord {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@Column(name = "transaction_id", nullable = false, unique = true)
+	@Column(name = "job_instance_id",nullable = false)
+	private Long jobInstanceId;
+
+	@Column(name = "transaction_id", nullable = false)
 	private String transactionId;
 
 	private String accountNumber;

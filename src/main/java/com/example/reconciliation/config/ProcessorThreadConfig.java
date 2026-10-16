@@ -8,20 +8,35 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @Configuration
 public class ProcessorThreadConfig {
 
-    @Bean
-    ThreadPoolTaskExecutor processorTaskExecutor(
-            @Value("${reconciliation.processor.core-pool-size}") int corePoolSize,
-            @Value("${reconciliation.processor.max-pool-size}") int maxPoolSize,
-            @Value("${reconciliation.processor.queue-capacity}") int queueCapacity) {
+	@Bean
+	public ThreadPoolTaskExecutor firstCsvTaskExecutor(
+			@Value("${reconciliation.processor.core-pool-size}") int corePoolSize,
+			@Value("${reconciliation.processor.max-pool-size}") int maxPoolSize,
+			@Value("${reconciliation.processor.queue-capacity}") int queueCapacity) {
 
-        ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+		return createExecutor(corePoolSize, maxPoolSize, queueCapacity, "first-csv-");
+	}
 
-        executor.setCorePoolSize(corePoolSize);
-        executor.setMaxPoolSize(maxPoolSize);
-        executor.setQueueCapacity(queueCapacity);
-        executor.setThreadNamePrefix("reconciliation-processor-");
-        executor.setWaitForTasksToCompleteOnShutdown(true);
+	@Bean
+	public ThreadPoolTaskExecutor secondCsvTaskExecutor(
+			@Value("${reconciliation.processor.core-pool-size}") int corePoolSize,
+			@Value("${reconciliation.processor.max-pool-size}") int maxPoolSize,
+			@Value("${reconciliation.processor.queue-capacity}") int queueCapacity) {
 
-        return executor;
-    }
+		return createExecutor(corePoolSize, maxPoolSize, queueCapacity, "second-csv-");
+	}
+
+	private ThreadPoolTaskExecutor createExecutor(int corePoolSize, int maxPoolSize, int queueCapacity,
+			String threadNamePrefix) {
+
+		ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+
+		executor.setCorePoolSize(corePoolSize);
+		executor.setMaxPoolSize(maxPoolSize);
+		executor.setQueueCapacity(queueCapacity);
+		executor.setThreadNamePrefix(threadNamePrefix);
+		executor.setWaitForTasksToCompleteOnShutdown(true);
+
+		return executor;
+	}
 }

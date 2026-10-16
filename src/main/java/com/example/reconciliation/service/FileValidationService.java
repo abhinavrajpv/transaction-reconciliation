@@ -19,7 +19,7 @@ public class FileValidationService {
 	private long maxFileSize;
 
 	@Value("${reconciliation.first-file.headers}")
-	private String expectedHeaders;
+	private String firstfileHeaders;
 
 	public String validateFile(String filePath) {
 
@@ -64,7 +64,7 @@ public class FileValidationService {
 
 				List<String> actualHeaders = Arrays.stream(header.split(",", -1)).map(String::trim).toList();
 
-				List<String> expected = Arrays.stream(expectedHeaders.split(",", -1)).map(String::trim).toList();
+				List<String> expected = Arrays.stream(firstfileHeaders.split(",", -1)).map(String::trim).toList();
 
 				if (!actualHeaders.equals(expected)) {
 					return "CSV headers are missing, incorrect, or in the wrong order";
