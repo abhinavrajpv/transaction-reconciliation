@@ -13,12 +13,13 @@ import org.springframework.batch.infrastructure.item.Chunk;
 import org.springframework.batch.infrastructure.item.ItemWriter;
 import org.springframework.batch.infrastructure.item.database.JdbcBatchItemWriter;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.example.reconciliation.dto.TransactionProcessingResultDto;
 import com.example.reconciliation.entity.TransactionRecord;
 import com.example.reconciliation.enums.RecordProcessingStatus;
+import com.example.reconciliation.repository.BatchAuditRepository;
 import com.example.reconciliation.repository.TransactionRepository;
-import com.example.reconciliation.utility.ProcessingCounters;
 
 @Component
 public class FirstCsvItemWriter implements ItemWriter<TransactionProcessingResultDto>, StepExecutionListener {
@@ -26,16 +27,16 @@ public class FirstCsvItemWriter implements ItemWriter<TransactionProcessingResul
 	private final TransactionRepository transactionRepository;
 	private final JdbcBatchItemWriter<TransactionRecord> jdbcBatchWriter;
 	private final ReconciliationResultsCsvWriter resultsWriter;
-	private final ProcessingCounters counters;
 	private Long jobInstanceId;
+	private final BatchAuditRepository auditRepository;
 
 	public FirstCsvItemWriter(TransactionRepository transactionRepository,
 			JdbcBatchItemWriter<TransactionRecord> jdbcBatchWriter, ReconciliationResultsCsvWriter resultsWriter,
-			ProcessingCounters counters) {
+		 BatchAuditRepository auditRepository) {
 		this.transactionRepository = transactionRepository;
 		this.jdbcBatchWriter = jdbcBatchWriter;
 		this.resultsWriter = resultsWriter;
-		this.counters = counters;
+		this.auditRepository = auditRepository;
 	}
 
 	private final Set<String> seenTransactionIds = new HashSet<>();
@@ -43,7 +44,6 @@ public class FirstCsvItemWriter implements ItemWriter<TransactionProcessingResul
 	@Override
 	public void beforeStep(StepExecution stepExecution) {
 		seenTransactionIds.clear();
-		counters.reset();
 		this.jobInstanceId = stepExecution.getJobExecution().getJobInstance().getInstanceId();
 
 		try {
@@ -54,7 +54,11 @@ public class FirstCsvItemWriter implements ItemWriter<TransactionProcessingResul
 	}
 
 	@Override
+	@Transactional
 	public void write(Chunk<? extends TransactionProcessingResultDto> chunk) throws Exception {
+		long total = 0;
+		long invalid = 0;
+		long duplicate = 0;
 
 		List<TransactionRecord> validTransactions = new ArrayList<>();
 
@@ -67,27 +71,28 @@ public class FirstCsvItemWriter implements ItemWriter<TransactionProcessingResul
 						.map(TransactionRecord::getTransactionId).collect(Collectors.toSet());
 
 		for (TransactionProcessingResultDto result : chunk) {
-			counters.recordFirstFileRecord();
+			total++;
 
 			if (result.getStatus() == RecordProcessingStatus.INVALID) {
-				counters.recordInvalid();
+				invalid++;
 				resultsWriter.write(result);
 				continue;
 			}
 
 			TransactionRecord transaction = result.getTransaction();
 			String transactionId = transaction.getTransactionId();
+
 			
 			/*
 			 * if ("TXN005912".equals(transactionId)) { throw new
 			 * RuntimeException("TEST FAILURE: Step 2"); }
 			 */
-			 
+
 			if (!seenTransactionIds.add(transactionId) || existingIds.contains(transactionId)) {
 
 				result.setStatus(RecordProcessingStatus.DUPLICATE);
 				result.setMessage("Transaction ID already exists");
-				counters.recordDuplicate();
+				duplicate++;
 				resultsWriter.write(result);
 				continue;
 			}
@@ -99,5 +104,6 @@ public class FirstCsvItemWriter implements ItemWriter<TransactionProcessingResul
 		if (!validTransactions.isEmpty()) {
 			jdbcBatchWriter.write(new Chunk<>(validTransactions));
 		}
+		auditRepository.incrementCounts(jobInstanceId, total, 0, 0, invalid, duplicate, 0);
 	}
 }

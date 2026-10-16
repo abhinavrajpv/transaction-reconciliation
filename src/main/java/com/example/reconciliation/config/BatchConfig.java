@@ -19,8 +19,8 @@ import com.example.reconciliation.dto.SecondCsvRecordDto;
 import com.example.reconciliation.dto.TransactionProcessingResultDto;
 import com.example.reconciliation.processor.SecondCsvRecordProcessor;
 import com.example.reconciliation.service.FileValidationService;
-import com.example.reconciliation.writer.BatchAuditItemWriter;
 import com.example.reconciliation.writer.FirstCsvItemWriter;
+import com.example.reconciliation.writer.ReconciliationItemWriter;
 
 @Configuration
 public class BatchConfig {
@@ -72,21 +72,14 @@ public class BatchConfig {
 	public Step reconcileSecondFileStep(JobRepository jobRepository, PlatformTransactionManager transactionManager,
 			FlatFileItemReader<SecondCsvRecordDto> secondCsvReader,
 			AsyncItemProcessor<SecondCsvRecordDto, ReconciliationResultDto> asyncSecondCsvProcessor,
-			AsyncItemWriter<ReconciliationResultDto> asyncSecondCsvWriter,SecondCsvRecordProcessor secondCsvRecordProcessor,
+			AsyncItemWriter<ReconciliationResultDto> asyncSecondCsvWriter,
+			SecondCsvRecordProcessor secondCsvRecordProcessor,
+			ReconciliationItemWriter reconciliationItemWriter,
 			@Value("${reconciliation.chunk-size}") int chunkSize) {
 
 		return new StepBuilder("reconcileSecondFileStep", jobRepository)
 				.<SecondCsvRecordDto, Future<ReconciliationResultDto>>chunk(chunkSize)
 				.transactionManager(transactionManager).reader(secondCsvReader).processor(asyncSecondCsvProcessor)
-				.writer(asyncSecondCsvWriter).listener(secondCsvRecordProcessor).build();
+				.writer(asyncSecondCsvWriter).listener(secondCsvRecordProcessor).listener(reconciliationItemWriter).build();
 	}
-
-	@Bean
-	public Step finalizeResultsAndAuditStep(JobRepository jobRepository, PlatformTransactionManager transactionManager,
-			BatchAuditItemWriter batchAuditItemWriter) {
-
-		return new StepBuilder("finalizeResultsAndAuditStep", jobRepository)
-				.tasklet(batchAuditItemWriter, transactionManager).build();
-	}
-
 }

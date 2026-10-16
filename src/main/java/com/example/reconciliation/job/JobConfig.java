@@ -7,17 +7,19 @@ import org.springframework.batch.core.step.Step;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.example.reconciliation.listener.BatchAuditJobListener;
+
 @Configuration
 public class JobConfig {
 
 	@Bean
 	public Job transactionReconciliationJob(JobRepository jobRepository, Step validateFirstFileStep,
 			Step ingestFirstFileStep, Step validateSecondFileStep, Step reconcileSecondFileStep,
-			Step finalizeResultsAndAuditStep) {
+			BatchAuditJobListener auditJobListener) {
 
-		return new JobBuilder("transactionReconciliationJob", jobRepository).start(validateFirstFileStep).on("FAILED")
+		return new JobBuilder("transactionReconciliationJob", jobRepository).listener(auditJobListener).start(validateFirstFileStep).on("FAILED")
 				.fail().from(validateFirstFileStep).on("*").to(ingestFirstFileStep).from(ingestFirstFileStep)
 				.next(validateSecondFileStep).on("FAILED").fail().from(validateSecondFileStep).on("*")
-				.to(reconcileSecondFileStep).from(reconcileSecondFileStep).next(finalizeResultsAndAuditStep).end().build();
+				.to(reconcileSecondFileStep).end().build();
 	}
 }
