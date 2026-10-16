@@ -28,6 +28,7 @@ public class FirstCsvItemWriter implements ItemWriter<TransactionProcessingResul
 	private final JdbcBatchItemWriter<TransactionRecord> jdbcBatchWriter;
 	private final ReconciliationResultsCsvWriter resultsWriter;
 	private Long jobInstanceId;
+	 private Long jobExecutionId;
 	private final BatchAuditRepository auditRepository;
 
 	public FirstCsvItemWriter(TransactionRepository transactionRepository,
@@ -44,10 +45,11 @@ public class FirstCsvItemWriter implements ItemWriter<TransactionProcessingResul
 	@Override
 	public void beforeStep(StepExecution stepExecution) {
 		seenTransactionIds.clear();
-		this.jobInstanceId = stepExecution.getJobExecution().getJobInstance().getInstanceId();
+		jobInstanceId = stepExecution.getJobExecution().getJobInstance().getInstanceId();
+		jobExecutionId = stepExecution.getJobExecution().getId();
 
 		try {
-			resultsWriter.initialize();
+			resultsWriter.initialize(jobExecutionId, jobInstanceId);
 		} catch (IOException ex) {
 			throw new IllegalStateException("Unable to initialize reconciliation results CSV", ex);
 		}
@@ -86,8 +88,8 @@ public class FirstCsvItemWriter implements ItemWriter<TransactionProcessingResul
 			/*
 			 * if ("TXN005912".equals(transactionId)) { throw new
 			 * RuntimeException("TEST FAILURE: Step 2"); }
+			 * 
 			 */
-
 			if (!seenTransactionIds.add(transactionId) || existingIds.contains(transactionId)) {
 
 				result.setStatus(RecordProcessingStatus.DUPLICATE);

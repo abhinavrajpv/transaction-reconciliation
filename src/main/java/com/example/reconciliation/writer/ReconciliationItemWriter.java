@@ -25,11 +25,20 @@ public class ReconciliationItemWriter implements ItemWriter<ReconciliationResult
 	private final ReconciliationResultsCsvWriter resultsWriter;
 	private final BatchAuditRepository auditRepository;
 	private Long jobInstanceId;
+	private Long jobExecutionId;
 
 	@Override
 	public void beforeStep(StepExecution stepExecution) {
 
 		jobInstanceId = stepExecution.getJobExecution().getJobInstance().getInstanceId();
+
+		jobExecutionId = stepExecution.getJobExecution().getId();
+
+		try {
+			resultsWriter.initialize(jobExecutionId, jobInstanceId);
+		} catch (IOException ex) {
+			throw new IllegalStateException("Unable to initialize reconciliation results CSV", ex);
+		}
 	}
 
 	@Override
@@ -40,7 +49,7 @@ public class ReconciliationItemWriter implements ItemWriter<ReconciliationResult
 		long missingFromDatabase = 0;
 
 		for (ReconciliationResultDto result : chunk) {
-			
+
 			/*
 			 * if ("TXN001078".equals(result.getTransactionId())) { throw new
 			 * RuntimeException( "TEST FAILURE: Step 4 for TXN1006"); }

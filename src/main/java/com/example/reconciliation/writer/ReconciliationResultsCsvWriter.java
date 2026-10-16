@@ -22,12 +22,17 @@ import lombok.Getter;
 public class ReconciliationResultsCsvWriter {
 
 	private final Path outputPath;
+	private Long jobExecutionId;
+	private Long jobInstanceId;
 
 	public ReconciliationResultsCsvWriter(@Value("${reconciliation.results-file}") String filePath) {
 		this.outputPath = Path.of(filePath);
 	}
 
-	public synchronized void initialize() throws IOException {
+	public synchronized void initialize(Long jobExecutionId, Long jobInstanceId) throws IOException {
+
+		this.jobExecutionId = jobExecutionId;
+		this.jobInstanceId = jobInstanceId;
 
 		Path parent = outputPath.getParent();
 
@@ -35,15 +40,16 @@ public class ReconciliationResultsCsvWriter {
 			Files.createDirectories(parent);
 		}
 
-		if (Files.exists(outputPath) && Files.size(outputPath) > 0) { // new
+		if (Files.exists(outputPath) && Files.size(outputPath) > 0) {
 			return;
 		}
 
 		try (BufferedWriter writer = Files.newBufferedWriter(outputPath, StandardCharsets.UTF_8,
 				StandardOpenOption.CREATE, StandardOpenOption.WRITE);
-				CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT.builder().setHeader("row_number",
-						"transaction_id", "status", "action", "message", "expected_amount", "actual_amount").get())) {
-
+				CSVPrinter csvPrinter = new CSVPrinter(writer,
+						CSVFormat.DEFAULT.builder().setHeader("job_execution_id", "job_instance_id", "row_number",
+								"transaction_id", "status", "action", "message", "expected_amount", "actual_amount")
+								.get())) {
 		}
 	}
 
@@ -55,9 +61,10 @@ public class ReconciliationResultsCsvWriter {
 				StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 				CSVPrinter csvPrinter = new CSVPrinter(writer, CSVFormat.DEFAULT)) {
 
-			csvPrinter.printRecord(result.getOriginalRecord().getRowNumber(), record.getTransactionId(),
-					result.getStatus().name(), result.getStatus().name().equals("INVALID") ? "REJECTED" : "DUPLICATE",
-					result.getMessage(), "", "");
+			csvPrinter.printRecord(jobExecutionId, jobInstanceId, result.getOriginalRecord().getRowNumber(),
+					record.getTransactionId(), result.getStatus().name(),
+					result.getStatus().name().equals("INVALID") ? "REJECTED" : "DUPLICATE", result.getMessage(), "",
+					"");
 		}
 	}
 
@@ -67,8 +74,9 @@ public class ReconciliationResultsCsvWriter {
 				StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 				CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT)) {
 
-			printer.printRecord(result.getRowNumber(), result.getTransactionId(), result.getStatus(),
-					result.getAction(), result.getMessage(), result.getExpectedAmount(), result.getActualAmount());
+			printer.printRecord(jobExecutionId, jobInstanceId, result.getRowNumber(), result.getTransactionId(),
+					result.getStatus(), result.getAction(), result.getMessage(), result.getExpectedAmount(),
+					result.getActualAmount());
 		}
 	}
 }
