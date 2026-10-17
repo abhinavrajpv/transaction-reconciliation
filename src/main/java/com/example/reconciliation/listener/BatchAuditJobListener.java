@@ -31,7 +31,6 @@ public class BatchAuditJobListener implements JobExecutionListener {
 
 		Long jobInstanceId = jobExecution.getJobInstance().getInstanceId();
 
-		// Preserve counts when restarting an existing job instance.
 		if (auditRepository.existsByJobInstanceId(jobInstanceId)) {
 			return;
 		}

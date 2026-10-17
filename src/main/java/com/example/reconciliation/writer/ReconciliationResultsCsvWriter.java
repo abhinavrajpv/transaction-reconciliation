@@ -75,7 +75,7 @@ public class ReconciliationResultsCsvWriter {
 				CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT)) {
 
 			printer.printRecord(jobExecutionId, jobInstanceId, result.getRowNumber(), result.getTransactionId(),
-					result.getStatus(), result.getAction(), result.getMessage(), result.getExpectedAmount(),
+					result.getStatus().name(), result.getAction().name(), result.getMessage(), result.getExpectedAmount(),
 					result.getActualAmount());
 		}
 	}

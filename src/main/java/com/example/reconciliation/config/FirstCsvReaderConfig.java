@@ -68,7 +68,7 @@ public class FirstCsvReaderConfig {
 		});
 
 		return new FlatFileItemReaderBuilder<FirstCsvRecordDto>().name("firstCsvReader")
-				.resource(new FileSystemResource(filePath)).encoding("UTF-8").linesToSkip(1)
+				.resource(new FileSystemResource(filePath)).encoding("UTF-8").linesToSkip(1)      
 				.lineMapper((line, lineNumber) -> {
 					FirstCsvRecordDto dto = lineMapper.mapLine(line, lineNumber);
 					dto.setRowNumber(lineNumber);

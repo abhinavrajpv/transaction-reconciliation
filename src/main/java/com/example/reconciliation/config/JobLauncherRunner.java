@@ -30,7 +30,7 @@ public class JobLauncherRunner implements CommandLineRunner {
 	@Override
 	public void run(String... args) throws Exception {
 
-		JobParameters parameters = new JobParametersBuilder().addString("firstFile", firstFile)
+		JobParameters parameters = new JobParametersBuilder().addString("firstFile", firstFile) 
 				.addString("secondFile", secondFile).toJobParameters();
 
 		jobOperator.run(reconciliationJob, parameters);

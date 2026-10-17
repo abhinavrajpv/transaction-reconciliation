@@ -17,6 +17,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 import com.example.reconciliation.dto.FirstCsvRecordDto;
 import com.example.reconciliation.dto.ReconciliationResultDto;
 import com.example.reconciliation.dto.TransactionProcessingResultDto;
+import com.example.reconciliation.enums.ReconciliationAction;
+import com.example.reconciliation.enums.ReconciliationStatus;
 import com.example.reconciliation.enums.RecordProcessingStatus;
 
 public class ReconciliationResultsCsvWriterTest {
@@ -102,8 +104,8 @@ public class ReconciliationResultsCsvWriterTest {
 		ReconciliationResultDto result = new ReconciliationResultDto();
 		result.setRowNumber(8);
 		result.setTransactionId("TXN003");
-		result.setStatus("MISMATCHED");
-		result.setAction("DATABASE_UPDATED");
+		result.setStatus(ReconciliationStatus.MISMATCHED);
+		result.setAction(ReconciliationAction.DATABASE_UPDATED);
 		result.setMessage("Amounts differ");
 		result.setExpectedAmount(new BigDecimal("100.00"));
 		result.setActualAmount(new BigDecimal("125.50"));
@@ -122,15 +124,16 @@ public class ReconciliationResultsCsvWriterTest {
 		ReconciliationResultDto first = new ReconciliationResultDto();
 		first.setRowNumber(2);
 		first.setTransactionId("TXN001");
-		first.setStatus("MISSING_FROM_DATABASE");
-		first.setAction("NOT_INSERTED");
+		first.setStatus(ReconciliationStatus.MISSING_FROM_DATABASE);
+		first.setAction(ReconciliationAction.NOT_INSERTED);
+
 		first.setMessage("Not found");
 
 		ReconciliationResultDto second = new ReconciliationResultDto();
 		second.setRowNumber(3);
 		second.setTransactionId("TXN002");
-		second.setStatus("MISMATCHED");
-		second.setAction("DATABASE_UPDATED");
+		second.setStatus(ReconciliationStatus.MISMATCHED);
+		second.setAction(ReconciliationAction.DATABASE_UPDATED);
 		second.setMessage("Different amount");
 
 		writer.write(first);

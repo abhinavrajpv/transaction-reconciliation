@@ -1,8 +1,12 @@
 
 package com.example.reconciliation.processor;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,6 +19,7 @@ import org.springframework.batch.core.step.StepExecution;
 
 import com.example.reconciliation.dto.ReconciliationResultDto;
 import com.example.reconciliation.dto.SecondCsvRecordDto;
+import com.example.reconciliation.enums.ReconciliationStatus;
 import com.example.reconciliation.service.TransactionReconciliationService;
 
 @ExtendWith(MockitoExtension.class)
@@ -57,7 +62,7 @@ public class SecondCsvRecordProcessorTest {
 
 		var expected = new ReconciliationResultDto();
 		expected.setTransactionId("TXN001");
-		expected.setStatus("MATCHED");
+		expected.setStatus(ReconciliationStatus.MATCHED);
 
 		when(reconciliationService.reconcile(input, 42L)).thenReturn(expected);
 

@@ -44,7 +44,7 @@ public class FileValidationService {
 		try {
 			long size = Files.size(path);
 
-			if (size > maxFileSize) {
+			if (size > maxFileSize) {  
 				return "File exceeds the configured size limit";
 			}
 

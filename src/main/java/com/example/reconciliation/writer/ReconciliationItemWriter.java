@@ -56,9 +56,9 @@ public class ReconciliationItemWriter implements ItemWriter<ReconciliationResult
 			 */
 
 			switch (result.getStatus()) {
-			case "MATCHED" -> matched++;
-
-			case "MISMATCHED" -> {
+			case MATCHED ->matched++;
+			  
+			case MISMATCHED -> {
 				TransactionRecord transaction = result.getExistingTransaction();
 
 				BigDecimal sourceAmount = result.getActualAmount();
@@ -70,7 +70,7 @@ public class ReconciliationItemWriter implements ItemWriter<ReconciliationResult
 				resultsWriter.write(result);
 			}
 
-			case "MISSING_FROM_DATABASE" -> {
+			case MISSING_FROM_DATABASE -> {
 				resultsWriter.write(result);
 				missingFromDatabase++;
 			}

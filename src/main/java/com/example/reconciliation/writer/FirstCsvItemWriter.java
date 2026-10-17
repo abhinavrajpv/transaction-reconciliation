@@ -93,7 +93,7 @@ public class FirstCsvItemWriter implements ItemWriter<TransactionProcessingResul
 			if (!seenTransactionIds.add(transactionId) || existingIds.contains(transactionId)) {
 				result.setStatus(RecordProcessingStatus.DUPLICATE);
 				result.setMessage("Transaction ID already exists");
-				duplicate++;
+				duplicate++;    
 				resultsWriter.write(result);
 				continue;
 			}

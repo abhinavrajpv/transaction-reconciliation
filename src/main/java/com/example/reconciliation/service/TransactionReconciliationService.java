@@ -8,6 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.reconciliation.dto.ReconciliationResultDto;
 import com.example.reconciliation.dto.SecondCsvRecordDto;
 import com.example.reconciliation.entity.TransactionRecord;
+import com.example.reconciliation.enums.ReconciliationAction;
+import com.example.reconciliation.enums.ReconciliationStatus;
 import com.example.reconciliation.repository.TransactionRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -29,8 +31,8 @@ public class TransactionReconciliationService {
 				.findByTransactionIdAndJobInstanceId(record.getTransactionId().trim(), jobInstanceId).orElse(null);
 
 		if (existing == null) {
-			result.setStatus("MISSING_FROM_DATABASE");
-			result.setAction("NOT_INSERTED");
+			result.setStatus(ReconciliationStatus.MISSING_FROM_DATABASE);
+			result.setAction(ReconciliationAction.NOT_INSERTED);
 			result.setMessage("Transaction ID not found in database");
 			result.setActualAmount(parseAmount(record.getAmount()));
 			return result;
@@ -44,12 +46,12 @@ public class TransactionReconciliationService {
 		result.setActualAmount(sourceAmount);
 
 		if (databaseAmount.compareTo(sourceAmount) == 0) {
-			result.setStatus("MATCHED");
-			result.setAction("NO_CHANGE");
+			result.setStatus(ReconciliationStatus.MATCHED);
+			result.setAction(ReconciliationAction.NO_CHANGE);
 			result.setMessage("Transaction amount matches");
 		} else {
-			result.setStatus("MISMATCHED");
-			result.setAction("DATABASE_UPDATED");
+			result.setStatus(ReconciliationStatus.MISMATCHED);
+			result.setAction(ReconciliationAction.DATABASE_UPDATED);
 			result.setMessage("Transaction amount differs from source");
 		}
 

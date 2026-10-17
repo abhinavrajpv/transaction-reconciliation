@@ -1,8 +1,13 @@
 
 package com.example.reconciliation.service;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -15,6 +20,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import com.example.reconciliation.dto.SecondCsvRecordDto;
 import com.example.reconciliation.entity.TransactionRecord;
+import com.example.reconciliation.enums.ReconciliationAction;
+import com.example.reconciliation.enums.ReconciliationStatus;
 import com.example.reconciliation.repository.TransactionRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -58,8 +65,8 @@ public class TransactionReconciliationServiceTest {
 
 		assertEquals(7, result.getRowNumber());
 		assertEquals("TXN001", result.getTransactionId());
-		assertEquals("MATCHED", result.getStatus());
-		assertEquals("NO_CHANGE", result.getAction());
+		assertEquals(ReconciliationStatus.MATCHED, result.getStatus());
+		assertEquals(ReconciliationAction.NO_CHANGE, result.getAction());
 		assertEquals("Transaction amount matches", result.getMessage());
 		assertEquals(new BigDecimal("100.00"), result.getExpectedAmount());
 		assertEquals(new BigDecimal("100.00"), result.getActualAmount());
@@ -79,8 +86,8 @@ public class TransactionReconciliationServiceTest {
 
 		var result = service.reconcile(input, 42L);
 
-		assertEquals("MATCHED", result.getStatus());
-		assertEquals("NO_CHANGE", result.getAction());
+		assertEquals(ReconciliationStatus.MATCHED, result.getStatus());
+		assertEquals(ReconciliationAction.NO_CHANGE, result.getAction());
 	}
 
 	@Test
@@ -93,8 +100,8 @@ public class TransactionReconciliationServiceTest {
 
 		var result = service.reconcile(input, 42L);
 
-		assertEquals("MISMATCHED", result.getStatus());
-		assertEquals("DATABASE_UPDATED", result.getAction());
+		assertEquals(ReconciliationStatus.MISMATCHED, result.getStatus());
+		assertEquals(ReconciliationAction.DATABASE_UPDATED, result.getAction());
 		assertEquals("Transaction amount differs from source", result.getMessage());
 		assertEquals(new BigDecimal("100.00"), result.getExpectedAmount());
 		assertEquals(new BigDecimal("125.50"), result.getActualAmount());
@@ -112,8 +119,8 @@ public class TransactionReconciliationServiceTest {
 
 		assertEquals(7, result.getRowNumber());
 		assertEquals("TXN999", result.getTransactionId());
-		assertEquals("MISSING_FROM_DATABASE", result.getStatus());
-		assertEquals("NOT_INSERTED", result.getAction());
+		assertEquals("MISSING_FROM_DATABASE", result.getStatus().name());
+		assertEquals("NOT_INSERTED", result.getAction().name());
 		assertEquals("Transaction ID not found in database", result.getMessage());
 		assertNull(result.getExpectedAmount());
 		assertEquals(new BigDecimal("55.25"), result.getActualAmount());
@@ -132,7 +139,7 @@ public class TransactionReconciliationServiceTest {
 
 		var result = service.reconcile(input, 42L);
 
-		assertEquals("MATCHED", result.getStatus());
+		assertEquals(ReconciliationStatus.MATCHED, result.getStatus());
 		verify(transactionRepository).findByTransactionIdAndJobInstanceId("TXN001", 42L);
 	}
 

@@ -1,8 +1,14 @@
 
 package com.example.reconciliation.writer;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -19,6 +25,8 @@ import org.springframework.batch.infrastructure.item.Chunk;
 
 import com.example.reconciliation.dto.ReconciliationResultDto;
 import com.example.reconciliation.entity.TransactionRecord;
+import com.example.reconciliation.enums.ReconciliationAction;
+import com.example.reconciliation.enums.ReconciliationStatus;
 import com.example.reconciliation.repository.BatchAuditRepository;
 import com.example.reconciliation.repository.TransactionRepository;
 
@@ -61,8 +69,8 @@ public class ReconciliationItemWriterTest {
 		ReconciliationResultDto result = new ReconciliationResultDto();
 		result.setRowNumber(2);
 		result.setTransactionId("TXN001");
-		result.setStatus(status);
-		result.setAction("test-action");
+		result.setStatus(ReconciliationStatus.valueOf(status));
+		result.setAction(ReconciliationAction.NO_CHANGE);
 		result.setMessage("test-message");
 		return result;
 	}
