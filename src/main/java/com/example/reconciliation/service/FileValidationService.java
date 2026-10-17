@@ -55,8 +55,10 @@ public class FileValidationService {
 			try (BufferedReader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
 
 				String header = reader.readLine();
-
-				if (header == null || header.isBlank()) {
+				/*
+				 * if (header == null) { return "File is empty"; }
+				 */
+				if (header.isBlank()) {
 					return "CSV header is missing";
 				}
 
