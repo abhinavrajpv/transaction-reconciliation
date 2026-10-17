@@ -12,6 +12,9 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mockito;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -47,18 +50,20 @@ public class FileValidationServiceTest {
 		assertEquals("Path is not a regular file", service.validateFile(tempDir.toString()));
 	}
 
-	@Test
-	void shouldRejectWrongExtension() throws IOException {
-		Path file = createFile("transactions.txt", HEADERS + "\nrow\n");
+	@ParameterizedTest
+	@ValueSource(strings = { "transactions.txt", "transactions.pdf", "transactions.json" })
+	void shouldRejectWrongExtension(String fileName) throws IOException {
+		Path file = createFile(fileName, HEADERS + "\nrow\n");
 
 		assertEquals("File must have a .csv extension", service.validateFile(file.toString()));
 	}
 
-	@Test
-	void shouldRejectEmptyFile() throws IOException {
-		Path file = createFile("empty.csv", "");
+	@ParameterizedTest
+	@CsvSource({ "'', File is empty", "'\n', CSV header is missing" })
+	void shouldRejectEmptyFileOrMissingHeader(String content, String expectedMessage) throws IOException {
+		Path file = createFile("test.csv", content);
 
-		assertEquals("File is empty", service.validateFile(file.toString()));
+		assertEquals(expectedMessage, service.validateFile(file.toString()));
 	}
 
 	@Test
@@ -69,26 +74,12 @@ public class FileValidationServiceTest {
 		assertEquals("File exceeds the configured size limit", service.validateFile(file.toString()));
 	}
 
-	@Test
-	void shouldRejectMissingHeader() throws IOException {
-		Path file = createFile("header.csv", "\n");
-
-		assertEquals("CSV header is missing", service.validateFile(file.toString()));
-	}
-
-	@Test
-	void shouldRejectIncorrectHeaders() throws IOException {
-		Path file = createFile("wrong-header.csv", "transaction_id,amount,account_number\nTXN1,10,ACC12345\n");
-
-		assertEquals("CSV headers are missing, incorrect, or in the wrong order",
-				service.validateFile(file.toString()));
-	}
-
-	@Test
-	void shouldRejectHeaderWithWrongOrder() throws IOException {
-		String wrongOrder = "account_number,transaction_id,transaction_date,amount,currency,transaction_type,description";
-
-		Path file = createFile("wrong-order.csv", wrongOrder + "\nACC12345,TXN1,2026-10-16,10,INR,CREDIT,Test\n");
+	@ParameterizedTest
+	@ValueSource(strings = { "transaction_id,amount,account_number",
+			"account_number,transaction_id,transaction_date,amount,currency,transaction_type,description",
+			"transaction_id,account_number,transaction_date,amount,currency,transaction_type,description,extra" })
+	void shouldRejectIncorrectHeaders(String header) throws IOException {
+		Path file = createFile("wrong-header.csv", header + "\n");
 
 		assertEquals("CSV headers are missing, incorrect, or in the wrong order",
 				service.validateFile(file.toString()));
@@ -130,14 +121,6 @@ public class FileValidationServiceTest {
 	}
 
 	@Test
-	void shouldRejectHeaderWithExtraColumn() throws IOException {
-		Path file = createFile("extra-column.csv", HEADERS + ",extra\nTXN1,ACC12345,2026-10-16,10,INR,CREDIT,Test,x\n");
-
-		assertEquals("CSV headers are missing, incorrect, or in the wrong order",
-				service.validateFile(file.toString()));
-	}
-
-	@Test
 	void shouldAcceptFileExactlyAtSizeLimit() throws Exception {
 		String content = HEADERS + "\n" + "TXN001,ACC12345,2026-10-01,100,INR,CREDIT,Salary";
 
@@ -160,20 +143,14 @@ public class FileValidationServiceTest {
 		assertEquals("File exceeds the configured size limit", service.validateFile(file.toString()));
 	}
 
-	@Test
-	void shouldRejectBlankHeader() throws Exception {
-		Path file = tempDir.resolve("blank-header.csv");
-		Files.writeString(file, "   \n" + HEADERS + "\n" + "TXN001,ACC12345,2026-10-01,100,INR,CREDIT,Salary");
+	@ParameterizedTest
+	@CsvSource({ "'   \n', CSV header is missing",
+			"'transaction_id,account_number,transaction_date,amount,currency,transaction_type,description\n\n   \n', CSV contains no data records" })
+	void shouldRejectBlankHeaderOrHeaderOnlyFile(String content, String expectedMessage) throws Exception {
+		Path file = tempDir.resolve("test.csv");
+		Files.writeString(file, content);
 
-		assertEquals("CSV header is missing", service.validateFile(file.toString()));
-	}
-
-	@Test
-	void shouldRejectHeaderOnlyFile() throws Exception {
-		Path file = tempDir.resolve("header-only.csv");
-		Files.writeString(file, HEADERS + "\n\n   \n");
-
-		assertEquals("CSV contains no data records", service.validateFile(file.toString()));
+		assertEquals(expectedMessage, service.validateFile(file.toString()));
 	}
 
 	@Test

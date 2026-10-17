@@ -1,15 +1,18 @@
 
 package com.example.reconciliation.writer;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.math.BigDecimal;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import com.example.reconciliation.dto.FirstCsvRecordDto;
 import com.example.reconciliation.dto.ReconciliationResultDto;
@@ -67,45 +70,29 @@ public class ReconciliationResultsCsvWriterTest {
 		assertEquals(22L, writer.getJobInstanceId());
 	}
 
-	@Test
-	void shouldWriteInvalidTransactionProcessingResult() throws Exception {
+	@ParameterizedTest
+	@CsvSource({ "INVALID, 3, TXN001, 'Invalid amount', REJECTED",
+			"DUPLICATE, 4, TXN002, 'Already exists', DUPLICATE" })
+	void shouldWriteTransactionProcessingResult(String status, int rowNumber, String transactionId, String message,
+			String action) throws Exception {
+
 		writer.initialize(101L, 22L);
 
 		FirstCsvRecordDto original = new FirstCsvRecordDto();
-		original.setRowNumber(3);
-		original.setTransactionId("TXN001");
+		original.setRowNumber(rowNumber);
+		original.setTransactionId(transactionId);
 
 		TransactionProcessingResultDto result = new TransactionProcessingResultDto();
 		result.setOriginalRecord(original);
-		result.setStatus(RecordProcessingStatus.INVALID);
-		result.setMessage("Invalid amount");
-
-		writer.write(result);
-
-		String[] lines = Files.readString(output).split("\\R");
-
-		assertEquals(2, lines.length);
-		assertTrue(lines[1].startsWith("101,22,3,TXN001,INVALID,REJECTED,Invalid amount"));
-	}
-
-	@Test
-	void shouldWriteDuplicateTransactionProcessingResult() throws Exception {
-		writer.initialize(101L, 22L);
-
-		FirstCsvRecordDto original = new FirstCsvRecordDto();
-		original.setRowNumber(4);
-		original.setTransactionId("TXN002");
-
-		TransactionProcessingResultDto result = new TransactionProcessingResultDto();
-		result.setOriginalRecord(original);
-		result.setStatus(RecordProcessingStatus.DUPLICATE);
-		result.setMessage("Already exists");
+		result.setStatus(RecordProcessingStatus.valueOf(status));
+		result.setMessage(message);
 
 		writer.write(result);
 
 		String content = Files.readString(output);
 
-		assertTrue(content.contains("101,22,4,TXN002,DUPLICATE,DUPLICATE,Already exists"));
+		assertTrue(content
+				.contains("101,22," + rowNumber + "," + transactionId + "," + status + "," + action + "," + message));
 	}
 
 	@Test
