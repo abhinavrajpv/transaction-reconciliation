@@ -13,26 +13,22 @@ import lombok.RequiredArgsConstructor;
 
 @Component
 @RequiredArgsConstructor
-public class SecondCsvRecordProcessor implements ItemProcessor<SecondCsvRecordDto, ReconciliationResultDto> , StepExecutionListener {
-
+public class SecondCsvRecordProcessor
+		implements ItemProcessor<SecondCsvRecordDto, ReconciliationResultDto>, StepExecutionListener {
 	private final TransactionReconciliationService reconciliationService;
 	private volatile Long jobInstanceId;
-	
-	 @Override
-	    public void beforeStep(StepExecution stepExecution) {
-	        jobInstanceId = stepExecution.getJobExecution()
-	                .getJobInstance()
-	                .getInstanceId();
-	    }
-	 
+
+	@Override
+	public void beforeStep(StepExecution stepExecution) {
+		jobInstanceId = stepExecution.getJobExecution().getJobInstance().getInstanceId();
+	}
+
 	@Override
 	public ReconciliationResultDto process(SecondCsvRecordDto item) {
 		Long currentJobInstanceId = jobInstanceId;
-
-        if (currentJobInstanceId == null) {
-            throw new IllegalStateException(
-                    "Job instance ID has not been initialized");
-        }
-		return reconciliationService.reconcile(item,currentJobInstanceId);
+		if (currentJobInstanceId == null) {
+			throw new IllegalStateException("Job instance ID has not been initialized");
+		}
+		return reconciliationService.reconcile(item, currentJobInstanceId);
 	}
 }

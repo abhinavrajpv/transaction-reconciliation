@@ -27,45 +27,33 @@ public class BatchAuditJobListener implements JobExecutionListener {
 
 	@Override
 	public void beforeJob(JobExecution jobExecution) {
-
 		Long jobInstanceId = jobExecution.getJobInstance().getInstanceId();
-
 		if (auditRepository.existsByJobInstanceId(jobInstanceId)) {
 			return;
 		}
-
 		BatchAudit audit = new BatchAudit();
-
 		audit.setJobInstanceId(jobInstanceId);
 		audit.setFirstFileName(Path.of(firstFile).getFileName().toString());
 		audit.setSecondFileName(Path.of(secondFile).getFileName().toString());
-
 		audit.setTotalFirstFileRecords(0);
 		audit.setMatchedRecords(0);
 		audit.setMismatchedRecords(0);
 		audit.setInvalidRecords(0);
 		audit.setDuplicateRecords(0);
 		audit.setMissingFromFirstFileRecords(0);
-
 		audit.setStartedAt(jobExecution.getStartTime() != null ? jobExecution.getStartTime() : LocalDateTime.now());
-
 		audit.setStatus("STARTED");
-
 		auditRepository.save(audit);
 	}
 
 	@Override
 	public void afterJob(JobExecution jobExecution) {
-
 		Long jobInstanceId = jobExecution.getJobInstance().getInstanceId();
-
 		auditRepository.findByJobInstanceId(jobInstanceId).ifPresent(audit -> {
 			audit.setStatus(jobExecution.getStatus().name());
-
 			if (jobExecution.getEndTime() != null) {
 				audit.setCompletedAt(jobExecution.getEndTime());
 			}
-
 			auditRepository.save(audit);
 		});
 	}

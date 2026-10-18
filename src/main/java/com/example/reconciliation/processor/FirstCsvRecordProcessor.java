@@ -17,21 +17,15 @@ public class FirstCsvRecordProcessor implements ItemProcessor<FirstCsvRecordDto,
 
 	@Override
 	public TransactionProcessingResultDto process(FirstCsvRecordDto record) {
-
 		TransactionProcessingResultDto result = new TransactionProcessingResultDto();
-
 		result.setOriginalRecord(record);
-
 		String validationError = validate(record);
-
 		if (validationError != null) {
 			result.setStatus(RecordProcessingStatus.INVALID);
 			result.setMessage(validationError);
 			return result;
 		}
-
 		TransactionRecord transaction = new TransactionRecord();
-
 		transaction.setTransactionId(record.getTransactionId().trim());
 		transaction.setAccountNumber(record.getAccountNumber().trim());
 		transaction.setTransactionDate(LocalDate.parse(record.getTransactionDate().trim()));
@@ -39,16 +33,13 @@ public class FirstCsvRecordProcessor implements ItemProcessor<FirstCsvRecordDto,
 		transaction.setCurrency(record.getCurrency().trim());
 		transaction.setTransactionType(record.getTransactionType().trim());
 		transaction.setDescription(record.getDescription());
-
 		result.setTransaction(transaction);
 		result.setStatus(RecordProcessingStatus.VALID);
 		result.setMessage("Record is valid");
-
 		return result;
 	}
 
 	private String validate(FirstCsvRecordDto record) {
-
 		if (record.getTransactionId() == null || record.getTransactionId().isBlank()) {
 			return "Transaction ID is required";
 		}
@@ -96,7 +87,6 @@ public class FirstCsvRecordProcessor implements ItemProcessor<FirstCsvRecordDto,
 		} catch (NumberFormatException ex) {
 			return "Amount must be a valid number";
 		}
-
 		return null;
 	}
 }

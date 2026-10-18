@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.batch.core.job.Job;
@@ -46,7 +47,7 @@ class JobLauncherRunnerTest {
 
 		ArgumentCaptor<JobParameters> parametersCaptor = ArgumentCaptor.forClass(JobParameters.class);
 
-		verify(jobOperator).run(org.mockito.ArgumentMatchers.eq(reconciliationJob), parametersCaptor.capture());
+		verify(jobOperator).run(ArgumentMatchers.eq(reconciliationJob), parametersCaptor.capture());
 
 		JobParameters parameters = parametersCaptor.getValue();
 
@@ -57,8 +58,7 @@ class JobLauncherRunnerTest {
 
 	@Test
 	void shouldPropagateExceptionWhenJobRunFails() throws Exception {
-		when(jobOperator.run(org.mockito.ArgumentMatchers.eq(reconciliationJob),
-				org.mockito.ArgumentMatchers.any(JobParameters.class)))
+		when(jobOperator.run(ArgumentMatchers.eq(reconciliationJob), ArgumentMatchers.any(JobParameters.class)))    
 				.thenThrow(new IllegalStateException("Job launch failed"));
 
 		assertThrows(IllegalStateException.class, () -> runner.run(new String[0]));

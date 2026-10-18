@@ -15,21 +15,15 @@ import com.example.reconciliation.dto.SecondCsvRecordDto;
 public class SecondCsvReaderConfig {
 
 	@Bean
-	public FlatFileItemReader<SecondCsvRecordDto> secondCsvReader(
-			@Value("${reconciliation.second-file}") String filePath) {
-
+	FlatFileItemReader<SecondCsvRecordDto> secondCsvReader(@Value("${reconciliation.second-file}") String filePath) {
 		DelimitedLineTokenizer tokenizer = new DelimitedLineTokenizer();
 		tokenizer.setDelimiter(",");
 		tokenizer.setNames("transactionId", "accountNumber", "transactionDate", "amount", "currency", "transactionType",
 				"description");
-
 		DefaultLineMapper<SecondCsvRecordDto> lineMapper = new DefaultLineMapper<>();
-
 		lineMapper.setLineTokenizer(tokenizer);
-
 		lineMapper.setFieldSetMapper(fieldSet -> {
 			SecondCsvRecordDto dto = new SecondCsvRecordDto();
-
 			dto.setTransactionId(fieldSet.readString("transactionId"));
 			dto.setAccountNumber(fieldSet.readString("accountNumber"));
 			dto.setTransactionDate(fieldSet.readString("transactionDate"));
@@ -37,7 +31,6 @@ public class SecondCsvReaderConfig {
 			dto.setCurrency(fieldSet.readString("currency"));
 			dto.setTransactionType(fieldSet.readString("transactionType"));
 			dto.setDescription(fieldSet.readString("description"));
-
 			return dto;
 		});
 

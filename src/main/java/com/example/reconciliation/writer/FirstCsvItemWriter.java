@@ -23,7 +23,6 @@ import com.example.reconciliation.repository.TransactionRepository;
 
 @Component
 public class FirstCsvItemWriter implements ItemWriter<TransactionProcessingResultDto>, StepExecutionListener {
-
 	private final TransactionRepository transactionRepository;
 	private final JdbcBatchItemWriter<TransactionRecord> jdbcBatchWriter;
 	private final ReconciliationResultsCsvWriter resultsWriter;
@@ -47,7 +46,6 @@ public class FirstCsvItemWriter implements ItemWriter<TransactionProcessingResul
 		seenTransactionIds.clear();
 		jobInstanceId = stepExecution.getJobExecution().getJobInstance().getInstanceId();
 		jobExecutionId = stepExecution.getJobExecution().getId();
-
 		try {
 			resultsWriter.initialize(jobExecutionId, jobInstanceId);
 		} catch (IOException ex) {
@@ -60,46 +58,36 @@ public class FirstCsvItemWriter implements ItemWriter<TransactionProcessingResul
 		long total = 0;
 		long invalid = 0;
 		long duplicate = 0;
-
 		List<TransactionRecord> validTransactions = new ArrayList<>();
-
 		Set<String> ids = chunk.getItems().stream().filter(
 				result -> result.getStatus() != RecordProcessingStatus.INVALID && result.getTransaction() != null)
 				.map(result -> result.getTransaction().getTransactionId()).collect(Collectors.toSet());
-
 		Set<String> existingIds = ids.isEmpty() ? Set.of()
 				: transactionRepository.findByTransactionIdInAndJobInstanceId(ids, jobInstanceId).stream()
 						.map(TransactionRecord::getTransactionId).collect(Collectors.toSet());
-
 		for (TransactionProcessingResultDto result : chunk) {
 			total++;
-
 			if (result.getStatus() == RecordProcessingStatus.INVALID) {
 				invalid++;
 				resultsWriter.write(result);
 				continue;
 			}
-
 			TransactionRecord transaction = result.getTransaction();
 			String transactionId = transaction.getTransactionId();
-
-			
 			/*
 			 * if ("TXN005912".equals(transactionId)) { throw new
 			 * RuntimeException("TEST FAILURE: Step 2"); }
-			 */			 
+			 */
 			if (!seenTransactionIds.add(transactionId) || existingIds.contains(transactionId)) {
 				result.setStatus(RecordProcessingStatus.DUPLICATE);
 				result.setMessage("Transaction ID already exists");
-				duplicate++;    
+				duplicate++;
 				resultsWriter.write(result);
 				continue;
 			}
-
 			transaction.setJobInstanceId(jobInstanceId);
 			validTransactions.add(transaction);
 		}
-
 		if (!validTransactions.isEmpty()) {
 			jdbcBatchWriter.write(new Chunk<>(validTransactions));
 		}

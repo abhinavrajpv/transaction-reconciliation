@@ -81,7 +81,7 @@ public class FirstCsvRecordProcessorTest {
 		record.setCurrency(" INR ");
 		record.setTransactionType(" CREDIT ");
 
-		var result = processor.process(record);
+		TransactionProcessingResultDto result = processor.process(record);
 
 		assertEquals(RecordProcessingStatus.VALID, result.getStatus());
 		assertEquals("TXN123", result.getTransaction().getTransactionId());
@@ -94,16 +94,16 @@ public class FirstCsvRecordProcessorTest {
 	@NullSource
 	@ValueSource(strings = { "   " })
 	void shouldRejectNullOrBlankTransactionId(String transactionId) {
-		var record = validRecord();
+		FirstCsvRecordDto record = validRecord();
 		record.setTransactionId(transactionId);
 
 		assertInvalid("Transaction ID is required", record);
 	}
 
 	@ParameterizedTest
-	@ValueSource(strings = { "TXN-123", "TXN@123", "TXN 123", "TXN#123" })
+	@ValueSource(strings = { "TXN-123", "TXN@123", "TXN 123", "TXN#123" })   
 	void shouldRejectSpecialCharactersInTransactionId(String transactionId) {
-		var record = validRecord();
+		FirstCsvRecordDto record = validRecord();
 		record.setTransactionId(transactionId);
 		assertInvalid("Transaction ID must contain only letters and numbers", record);
 	}
@@ -112,7 +112,7 @@ public class FirstCsvRecordProcessorTest {
 	@NullSource
 	@ValueSource(strings = { " " })
 	void shouldRejectNullOrBlankAccountNumber(String accountNumber) {
-		var record = validRecord();
+		FirstCsvRecordDto record = validRecord();
 		record.setAccountNumber(accountNumber);
 
 		assertInvalid("Account number is required", record);
@@ -121,7 +121,7 @@ public class FirstCsvRecordProcessorTest {
 	@ParameterizedTest
 	@ValueSource(strings = { "ABC1234", "ABC123456", "ABC12@45" })
 	void shouldRejectInvalidAccountNumber(String accountNumber) {
-		var record = validRecord();
+		FirstCsvRecordDto record = validRecord();
 		record.setAccountNumber(accountNumber);
 		assertInvalid("Account number must contain exactly 8 letters or digits", record);
 	}
@@ -130,7 +130,7 @@ public class FirstCsvRecordProcessorTest {
 	@NullSource
 	@ValueSource(strings = { " " })
 	void shouldRejectNullOrBlankTransactionDate(String transactionDate) {
-		var record = validRecord();
+		FirstCsvRecordDto record = validRecord();
 		record.setTransactionDate(transactionDate);
 
 		assertInvalid("Transaction date is required", record);
@@ -139,7 +139,7 @@ public class FirstCsvRecordProcessorTest {
 	@ParameterizedTest
 	@ValueSource(strings = { "16-10-2026", "2026-02-30" })
 	void shouldRejectMalformedOrImpossibleTransactionDate(String transactionDate) {
-		var record = validRecord();
+		FirstCsvRecordDto record = validRecord();
 		record.setTransactionDate(transactionDate);
 
 		assertInvalid("Transaction date must use yyyy-MM-dd format", record);
@@ -149,7 +149,7 @@ public class FirstCsvRecordProcessorTest {
 	@NullSource
 	@ValueSource(strings = { " " })
 	void shouldRejectNullOrBlankAmount(String amount) {
-		var record = validRecord();
+		FirstCsvRecordDto record = validRecord();
 		record.setAmount(amount);
 
 		assertInvalid("Amount is required", record);
@@ -158,7 +158,7 @@ public class FirstCsvRecordProcessorTest {
 	@ParameterizedTest
 	@CsvSource({ "abc, Amount must be a valid number", "-0.01, Amount cannot be negative" })
 	void shouldRejectInvalidAmount(String amount, String expectedMessage) {
-		var record = validRecord();
+		FirstCsvRecordDto record = validRecord();
 		record.setAmount(amount);
 
 		assertInvalid(expectedMessage, record);
@@ -166,10 +166,10 @@ public class FirstCsvRecordProcessorTest {
 
 	@Test
 	void shouldAcceptZeroAmount() {
-		var record = validRecord();
+		FirstCsvRecordDto record = validRecord();
 		record.setAmount("0");
 
-		var result = processor.process(record);
+		TransactionProcessingResultDto result = processor.process(record);
 
 		assertEquals(RecordProcessingStatus.VALID, result.getStatus());
 		assertEquals(BigDecimal.ZERO, result.getTransaction().getAmount());
@@ -179,7 +179,7 @@ public class FirstCsvRecordProcessorTest {
 	@NullSource
 	@ValueSource(strings = { " " })
 	void shouldRejectNullOrBlankCurrency(String currency) {
-		var record = validRecord();
+		FirstCsvRecordDto record = validRecord();
 		record.setCurrency(currency);
 
 		assertInvalid("Currency is required", record);
@@ -188,7 +188,7 @@ public class FirstCsvRecordProcessorTest {
 	@ParameterizedTest
 	@ValueSource(strings = { "US", "IN1" })
 	void shouldRejectInvalidCurrency(String currency) {
-		var record = validRecord();
+		FirstCsvRecordDto record = validRecord();
 		record.setCurrency(currency);
 
 		assertInvalid("Currency must contain exactly 3 letters", record);
@@ -198,7 +198,7 @@ public class FirstCsvRecordProcessorTest {
 	@NullSource
 	@ValueSource(strings = { " " })
 	void shouldRejectNullOrBlankTransactionType(String transactionType) {
-		var record = validRecord();
+		FirstCsvRecordDto record = validRecord();
 		record.setTransactionType(transactionType);
 
 		assertInvalid("Transaction type is required", record);
@@ -206,7 +206,7 @@ public class FirstCsvRecordProcessorTest {
 
 	@Test
 	void shouldPreserveNullDescription() {
-		var record = validRecord();
+		FirstCsvRecordDto record = validRecord();
 		record.setDescription(null);
 
 		var result = processor.process(record);

@@ -53,7 +53,7 @@ public class FileValidationTaskletTest {
 		RepeatStatus status = tasklet.execute(contribution, chunkContext);
 
 		assertEquals(RepeatStatus.FINISHED, status);
-		verify(contribution).setExitStatus(argThat(exitStatus -> exitStatus.getExitCode().equals("FAILED")
+		verify(contribution).setExitStatus(argThat(exitStatus -> exitStatus.getExitCode().equals("FAILED")  
 				&& exitStatus.getExitDescription().contains("File does not exist")));
 	}
 }

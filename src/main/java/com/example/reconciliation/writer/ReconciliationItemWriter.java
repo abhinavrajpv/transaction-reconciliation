@@ -20,7 +20,6 @@ import lombok.RequiredArgsConstructor;
 @Component
 @RequiredArgsConstructor
 public class ReconciliationItemWriter implements ItemWriter<ReconciliationResultDto>, StepExecutionListener {
-
 	private final TransactionRepository transactionRepository;
 	private final ReconciliationResultsCsvWriter resultsWriter;
 	private final BatchAuditRepository auditRepository;
@@ -29,11 +28,8 @@ public class ReconciliationItemWriter implements ItemWriter<ReconciliationResult
 
 	@Override
 	public void beforeStep(StepExecution stepExecution) {
-
 		jobInstanceId = stepExecution.getJobExecution().getJobInstance().getInstanceId();
-
 		jobExecutionId = stepExecution.getJobExecution().getId();
-
 		try {
 			resultsWriter.initialize(jobExecutionId, jobInstanceId);
 		} catch (IOException ex) {
@@ -46,27 +42,21 @@ public class ReconciliationItemWriter implements ItemWriter<ReconciliationResult
 		long matched = 0;
 		long mismatched = 0;
 		long missingFromDatabase = 0;
-
 		for (ReconciliationResultDto result : chunk) {
 			/*
 			 * if ("TXN001078".equals(result.getTransactionId())) { throw new
 			 * RuntimeException( "TEST FAILURE: Step 4 for TXN1006"); }
-			 */	 
+			 */
 			switch (result.getStatus()) {
-			case MATCHED ->matched++;
-			  
+			case MATCHED -> matched++;
 			case MISMATCHED -> {
 				TransactionRecord transaction = result.getExistingTransaction();
-
 				BigDecimal sourceAmount = result.getActualAmount();
 				transaction.setAmount(sourceAmount);
-
 				transactionRepository.save(transaction);
-
 				mismatched++;
 				resultsWriter.write(result);
 			}
-
 			case MISSING_FROM_DATABASE -> {
 				resultsWriter.write(result);
 				missingFromDatabase++;

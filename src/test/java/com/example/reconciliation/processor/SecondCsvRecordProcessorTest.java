@@ -37,7 +37,7 @@ public class SecondCsvRecordProcessorTest {
 
 	@Test
 	void shouldRejectProcessingBeforeStepInitialization() {
-		var record = new SecondCsvRecordDto();
+		SecondCsvRecordDto record = new SecondCsvRecordDto();
 		record.setTransactionId("TXN001");
 
 		assertThrows(IllegalStateException.class, () -> processor.process(record));
@@ -57,10 +57,10 @@ public class SecondCsvRecordProcessorTest {
 
 		processor.beforeStep(stepExecution);
 
-		var input = new SecondCsvRecordDto();
+		SecondCsvRecordDto input = new SecondCsvRecordDto();
 		input.setTransactionId("TXN001");
 
-		var expected = new ReconciliationResultDto();
+		ReconciliationResultDto expected = new ReconciliationResultDto();
 		expected.setTransactionId("TXN001");
 		expected.setStatus(ReconciliationStatus.MATCHED);
 

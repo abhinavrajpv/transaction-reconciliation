@@ -19,37 +19,29 @@ import com.example.reconciliation.writer.ReconciliationItemWriter;
 public class AsyncProcessorConfig {
 
 	@Bean
-	public AsyncItemProcessor<FirstCsvRecordDto, TransactionProcessingResultDto> asyncFirstCsvProcessor(
+	AsyncItemProcessor<FirstCsvRecordDto, TransactionProcessingResultDto> asyncFirstCsvProcessor(
 			FirstCsvRecordProcessor delegate, ThreadPoolTaskExecutor firstCsvTaskExecutor) {
-
 		AsyncItemProcessor<FirstCsvRecordDto, TransactionProcessingResultDto> processor = new AsyncItemProcessor<>(
 				delegate);
-
 		processor.setTaskExecutor(firstCsvTaskExecutor);
-
 		return processor;
 	}
 
 	@Bean
-	public AsyncItemWriter<TransactionProcessingResultDto> asyncFirstCsvWriter(FirstCsvItemWriter delegate) {
-
+	AsyncItemWriter<TransactionProcessingResultDto> asyncFirstCsvWriter(FirstCsvItemWriter delegate) {
 		return new AsyncItemWriter<>(delegate);
 	}
 
 	@Bean
-	public AsyncItemProcessor<SecondCsvRecordDto, ReconciliationResultDto> asyncSecondCsvProcessor(
+	AsyncItemProcessor<SecondCsvRecordDto, ReconciliationResultDto> asyncSecondCsvProcessor(
 			SecondCsvRecordProcessor delegate, ThreadPoolTaskExecutor secondCsvTaskExecutor) {
-
 		AsyncItemProcessor<SecondCsvRecordDto, ReconciliationResultDto> processor = new AsyncItemProcessor<>(delegate);
-
 		processor.setTaskExecutor(secondCsvTaskExecutor);
-
 		return processor;
 	}
 
 	@Bean
-	public AsyncItemWriter<ReconciliationResultDto> asyncSecondCsvWriter(ReconciliationItemWriter delegate) {
-
+	AsyncItemWriter<ReconciliationResultDto> asyncSecondCsvWriter(ReconciliationItemWriter delegate) {
 		return new AsyncItemWriter<>(delegate);
-	}
+	}  
 }

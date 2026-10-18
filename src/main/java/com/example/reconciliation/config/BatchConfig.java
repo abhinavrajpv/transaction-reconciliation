@@ -26,34 +26,30 @@ import com.example.reconciliation.writer.ReconciliationItemWriter;
 public class BatchConfig {
 
 	@Bean
-	public FileValidationTasklet firstFileValidationTasklet(FileValidationService validationService,
+	FileValidationTasklet firstFileValidationTasklet(FileValidationService validationService,
 			@Value("${reconciliation.first-file}") String filePath) {
-
 		return new FileValidationTasklet(validationService, filePath);
 	}
 
 	@Bean
-	public FileValidationTasklet secondFileValidationTasklet(FileValidationService validationService,
+	FileValidationTasklet secondFileValidationTasklet(FileValidationService validationService,
 			@Value("${reconciliation.second-file}") String filePath) {
-
 		return new FileValidationTasklet(validationService, filePath);
 	}
 
 	@Bean
-	public Step validateFirstFileStep(JobRepository jobRepository, PlatformTransactionManager transactionManager,
+	Step validateFirstFileStep(JobRepository jobRepository, PlatformTransactionManager transactionManager,
 			FileValidationTasklet firstFileValidationTasklet) {
-
 		return new StepBuilder("validateFirstFileStep", jobRepository)
 				.tasklet(firstFileValidationTasklet, transactionManager).build();
 	}
 
 	@Bean
-	public Step ingestFirstFileStep(JobRepository jobRepository, PlatformTransactionManager transactionManager,
+	Step ingestFirstFileStep(JobRepository jobRepository, PlatformTransactionManager transactionManager,
 			FlatFileItemReader<FirstCsvRecordDto> firstCsvReader,
 			AsyncItemProcessor<FirstCsvRecordDto, TransactionProcessingResultDto> asyncFirstCsvProcessor,
 			AsyncItemWriter<TransactionProcessingResultDto> asyncFirstCsvWriter, FirstCsvItemWriter firstCsvItemWriter,
 			@Value("${reconciliation.chunk-size}") int chunkSize) {
-
 		return new StepBuilder("ingestFirstFileStep", jobRepository)
 				.<FirstCsvRecordDto, Future<TransactionProcessingResultDto>>chunk(chunkSize)
 				.transactionManager(transactionManager).reader(firstCsvReader).processor(asyncFirstCsvProcessor)
@@ -61,22 +57,20 @@ public class BatchConfig {
 	}
 
 	@Bean
-	public Step validateSecondFileStep(JobRepository jobRepository, PlatformTransactionManager transactionManager,
+	Step validateSecondFileStep(JobRepository jobRepository, PlatformTransactionManager transactionManager,
 			FileValidationTasklet secondFileValidationTasklet) {
-
 		return new StepBuilder("validateSecondFileStep", jobRepository)
 				.tasklet(secondFileValidationTasklet, transactionManager).build();
 	}
 
 	@Bean
-	public Step reconcileSecondFileStep(JobRepository jobRepository, PlatformTransactionManager transactionManager,
+	Step reconcileSecondFileStep(JobRepository jobRepository, PlatformTransactionManager transactionManager,
 			FlatFileItemReader<SecondCsvRecordDto> secondCsvReader,
 			AsyncItemProcessor<SecondCsvRecordDto, ReconciliationResultDto> asyncSecondCsvProcessor,
 			AsyncItemWriter<ReconciliationResultDto> asyncSecondCsvWriter,
 			SecondCsvRecordProcessor secondCsvRecordProcessor,
 			ReconciliationItemWriter reconciliationItemWriter,
 			@Value("${reconciliation.chunk-size}") int chunkSize) {
-
 		return new StepBuilder("reconcileSecondFileStep", jobRepository)
 				.<SecondCsvRecordDto, Future<ReconciliationResultDto>>chunk(chunkSize)
 				.transactionManager(transactionManager).reader(secondCsvReader).processor(asyncSecondCsvProcessor)

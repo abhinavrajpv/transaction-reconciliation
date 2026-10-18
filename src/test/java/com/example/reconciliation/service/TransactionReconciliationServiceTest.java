@@ -18,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.example.reconciliation.dto.ReconciliationResultDto;
 import com.example.reconciliation.dto.SecondCsvRecordDto;
 import com.example.reconciliation.entity.TransactionRecord;
 import com.example.reconciliation.enums.ReconciliationAction;
@@ -54,14 +55,14 @@ public class TransactionReconciliationServiceTest {
 	}
 
 	@Test
-	void shouldReturnMatchedWhenAmountsAreEqual() {
-		var input = record("TXN001", "100.00");
-		var transaction = existing("TXN001", "100.00");
+	void shouldReturnMatchedWhenAmountsAreEqual() {   
+		SecondCsvRecordDto input = record("TXN001", "100.00");
+		TransactionRecord transaction = existing("TXN001", "100.00");
 
 		when(transactionRepository.findByTransactionIdAndJobInstanceId("TXN001", 42L))
 				.thenReturn(Optional.of(transaction));
 
-		var result = service.reconcile(input, 42L);
+		ReconciliationResultDto result = service.reconcile(input, 42L);
 
 		assertEquals(7, result.getRowNumber());
 		assertEquals("TXN001", result.getTransactionId());
@@ -78,13 +79,13 @@ public class TransactionReconciliationServiceTest {
 
 	@Test
 	void shouldReturnMatchedWhenBigDecimalScaleDiffers() {
-		var input = record("TXN001", "100.0");
-		var transaction = existing("TXN001", "100.00");
+		SecondCsvRecordDto input = record("TXN001", "100.0");
+		TransactionRecord transaction = existing("TXN001", "100.00");
 
 		when(transactionRepository.findByTransactionIdAndJobInstanceId("TXN001", 42L))
 				.thenReturn(Optional.of(transaction));
 
-		var result = service.reconcile(input, 42L);
+		ReconciliationResultDto result = service.reconcile(input, 42L);
 
 		assertEquals(ReconciliationStatus.MATCHED, result.getStatus());
 		assertEquals(ReconciliationAction.NO_CHANGE, result.getAction());
@@ -92,13 +93,13 @@ public class TransactionReconciliationServiceTest {
 
 	@Test
 	void shouldReturnMismatchedWhenAmountsDiffer() {
-		var input = record("TXN001", "125.50");
-		var transaction = existing("TXN001", "100.00");
+		SecondCsvRecordDto input = record("TXN001", "125.50");
+		TransactionRecord transaction = existing("TXN001", "100.00");
 
 		when(transactionRepository.findByTransactionIdAndJobInstanceId("TXN001", 42L))
 				.thenReturn(Optional.of(transaction));
 
-		var result = service.reconcile(input, 42L);
+		ReconciliationResultDto result = service.reconcile(input, 42L);
 
 		assertEquals(ReconciliationStatus.MISMATCHED, result.getStatus());
 		assertEquals(ReconciliationAction.DATABASE_UPDATED, result.getAction());
@@ -111,11 +112,11 @@ public class TransactionReconciliationServiceTest {
 
 	@Test
 	void shouldReturnMissingWhenTransactionDoesNotExist() {
-		var input = record("TXN999", "55.25");
+		SecondCsvRecordDto input = record("TXN999", "55.25");
 
 		when(transactionRepository.findByTransactionIdAndJobInstanceId("TXN999", 42L)).thenReturn(Optional.empty());
 
-		var result = service.reconcile(input, 42L);
+		ReconciliationResultDto result = service.reconcile(input, 42L);
 
 		assertEquals(7, result.getRowNumber());
 		assertEquals("TXN999", result.getTransactionId());
@@ -131,13 +132,13 @@ public class TransactionReconciliationServiceTest {
 
 	@Test
 	void shouldTrimTransactionIdBeforeRepositoryLookup() {
-		var input = record(" TXN001 ", "100");
-		var transaction = existing("TXN001", "100");
+		SecondCsvRecordDto input = record(" TXN001 ", "100");
+		TransactionRecord transaction = existing("TXN001", "100");
 
 		when(transactionRepository.findByTransactionIdAndJobInstanceId("TXN001", 42L))
 				.thenReturn(Optional.of(transaction));
 
-		var result = service.reconcile(input, 42L);
+		ReconciliationResultDto result = service.reconcile(input, 42L);
 
 		assertEquals(ReconciliationStatus.MATCHED, result.getStatus());
 		verify(transactionRepository).findByTransactionIdAndJobInstanceId("TXN001", 42L);
@@ -145,7 +146,7 @@ public class TransactionReconciliationServiceTest {
 
 	@Test
 	void shouldPropagateInvalidAmountException() {
-		var input = record("TXN001", "not-a-number");
+		SecondCsvRecordDto input = record("TXN001", "not-a-number");
 
 		when(transactionRepository.findByTransactionIdAndJobInstanceId("TXN001", 42L)).thenReturn(Optional.empty());
 
@@ -154,8 +155,8 @@ public class TransactionReconciliationServiceTest {
 
 	@Test
 	void shouldPropagateInvalidAmountWhenTransactionExists() {
-		var input = record("TXN001", "not-a-number");
-		var transaction = existing("TXN001", "100");
+		SecondCsvRecordDto input = record("TXN001", "not-a-number");
+		TransactionRecord transaction = existing("TXN001", "100");
 
 		when(transactionRepository.findByTransactionIdAndJobInstanceId("TXN001", 42L))
 				.thenReturn(Optional.of(transaction));

@@ -64,7 +64,6 @@ class FirstCsvItemWriterTest {
 	@BeforeEach
 	void setUp() {
 		writer = new FirstCsvItemWriter(transactionRepository, jdbcBatchWriter, resultsWriter, auditRepository);
-
 		when(stepExecution.getJobExecution()).thenReturn(jobExecution);
 		when(jobExecution.getJobInstance()).thenReturn(jobInstance);
 		when(jobInstance.getInstanceId()).thenReturn(42L);
@@ -72,16 +71,12 @@ class FirstCsvItemWriterTest {
 	}
 
 	private TransactionProcessingResultDto result(String id, RecordProcessingStatus status) {
-
 		FirstCsvRecordDto original = new FirstCsvRecordDto();
 		original.setRowNumber(2);
 		original.setTransactionId(id);
-
 		TransactionProcessingResultDto result = new TransactionProcessingResultDto();
-
 		result.setOriginalRecord(original);
 		result.setStatus(status);
-
 		if (status != RecordProcessingStatus.INVALID) {
 			TransactionRecord transaction = new TransactionRecord();
 			transaction.setTransactionId(id);
@@ -91,114 +86,79 @@ class FirstCsvItemWriterTest {
 			transaction.setCurrency("INR");
 			transaction.setTransactionType("CREDIT");
 			transaction.setDescription("Test");
-
 			result.setTransaction(transaction);
 		}
-
 		return result;
 	}
 
 	@Test
 	void shouldInitializeResultsWriterWithExecutionAndInstanceIds() throws IOException {
 		writer.beforeStep(stepExecution);
-
 		verify(resultsWriter).initialize(101L, 42L);
 	}
 
 	@Test
 	void shouldThrowIllegalStateExceptionWhenResultsWriterInitializationFails() throws Exception {
-
 		doThrow(new IOException("File initialization failed")).when(resultsWriter).initialize(101L, 42L);
-
 		IllegalStateException exception = assertThrows(IllegalStateException.class,
 				() -> writer.beforeStep(stepExecution));
-
 		assertEquals("Unable to initialize reconciliation results CSV", exception.getMessage());
-
 		assertInstanceOf(IOException.class, exception.getCause());
 		assertEquals("File initialization failed", exception.getCause().getMessage());
 	}
 
 	@Test
 	void shouldInsertNewValidTransactionAndIncrementTotal() throws Exception {
-
 		writer.beforeStep(stepExecution);
-
-		var result = result("TXN001", RecordProcessingStatus.VALID);
-
+		TransactionProcessingResultDto result = result("TXN001", RecordProcessingStatus.VALID);
 		when(transactionRepository.findByTransactionIdInAndJobInstanceId(Set.of("TXN001"), 42L)).thenReturn(List.of());
-
 		writer.write(new Chunk<>(List.of(result)));
-
 		assertEquals(42L, result.getTransaction().getJobInstanceId());
-
 		verify(jdbcBatchWriter).write(
 				argThat(chunk -> chunk.getItems().size() == 1 && chunk.getItems().get(0) == result.getTransaction()));
-
 		verify(auditRepository).incrementCounts(42L, 1, 0, 0, 0, 0, 0);
-
 		verify(resultsWriter, never()).write(result);
 	}
 
 	@Test
 	void shouldWriteInvalidRecordAndIncrementInvalidCount() throws Exception {
-
 		writer.beforeStep(stepExecution);
-
-		var invalid = result("TXN002", RecordProcessingStatus.INVALID);
+		TransactionProcessingResultDto invalid = result("TXN002", RecordProcessingStatus.INVALID);
 		invalid.setMessage("Invalid amount");
-
 		writer.write(new Chunk<>(List.of(invalid)));
-
 		verify(resultsWriter).write(invalid);
 		verify(jdbcBatchWriter, never()).write(any());
-
 		verify(transactionRepository, never()).findByTransactionIdInAndJobInstanceId(any(), any());
-
 		verify(auditRepository).incrementCounts(42L, 1, 0, 0, 1, 0, 0);
 	}
 
 	@Test
 	void shouldRejectDuplicateWithinSameChunk() throws Exception {
 		writer.beforeStep(stepExecution);
-
-		var first = result("TXN003", RecordProcessingStatus.VALID);
-		var second = result("TXN003", RecordProcessingStatus.VALID);
-
+		TransactionProcessingResultDto first = result("TXN003", RecordProcessingStatus.VALID);
+		TransactionProcessingResultDto second = result("TXN003", RecordProcessingStatus.VALID);
 		when(transactionRepository.findByTransactionIdInAndJobInstanceId(Set.of("TXN003"), 42L)).thenReturn(List.of());
-
 		writer.write(new Chunk<>(List.of(first, second)));
-
 		assertEquals(RecordProcessingStatus.VALID, first.getStatus());
 		assertEquals(RecordProcessingStatus.DUPLICATE, second.getStatus());
 		assertEquals("Transaction ID already exists", second.getMessage());
-
 		verify(jdbcBatchWriter).write(argThat(chunk -> chunk.getItems().size() == 1));
-
 		verify(resultsWriter).write(second);
-
 		verify(auditRepository).incrementCounts(42L, 2, 0, 0, 0, 1, 0);
 	}
 
 	@Test
 	void shouldRejectRecordAlreadyInDatabase() throws Exception {
 		writer.beforeStep(stepExecution);
-
-		var duplicate = result("TXN004", RecordProcessingStatus.VALID);
-
+		TransactionProcessingResultDto duplicate = result("TXN004", RecordProcessingStatus.VALID);
 		TransactionRecord existing = new TransactionRecord();
 		existing.setTransactionId("TXN004");
-
 		when(transactionRepository.findByTransactionIdInAndJobInstanceId(Set.of("TXN004"), 42L))
 				.thenReturn(List.of(existing));
-
 		writer.write(new Chunk<>(List.of(duplicate)));
-
 		assertEquals(RecordProcessingStatus.DUPLICATE, duplicate.getStatus());
-
 		verify(resultsWriter).write(duplicate);
 		verify(jdbcBatchWriter, never()).write(any());
-
 		verify(auditRepository).incrementCounts(42L, 1, 0, 0, 0, 1, 0);
 	}
 
@@ -207,7 +167,7 @@ class FirstCsvItemWriterTest {
 
 		writer.beforeStep(stepExecution);
 
-		var invalid = result("TXN005", RecordProcessingStatus.INVALID);
+		TransactionProcessingResultDto invalid = result("TXN005", RecordProcessingStatus.INVALID);
 
 		writer.write(new Chunk<>(List.of(invalid)));
 
@@ -221,7 +181,7 @@ class FirstCsvItemWriterTest {
 
 		writer.beforeStep(stepExecution);
 
-		var duplicate = result("TXN006", RecordProcessingStatus.VALID);
+		TransactionProcessingResultDto duplicate = result("TXN006", RecordProcessingStatus.VALID);
 
 		TransactionRecord existing = new TransactionRecord();
 		existing.setTransactionId("TXN006");
@@ -238,16 +198,16 @@ class FirstCsvItemWriterTest {
 	void shouldClearSeenIdsWhenStepStartsAgain() throws Exception {
 		writer.beforeStep(stepExecution);
 
-		var first = result("TXN007", RecordProcessingStatus.VALID);
+		TransactionProcessingResultDto first = result("TXN007", RecordProcessingStatus.VALID);
 
 		when(transactionRepository.findByTransactionIdInAndJobInstanceId(Set.of("TXN007"), 42L)).thenReturn(List.of());
 
 		writer.write(new Chunk<>(List.of(first)));
 
-		// Simulate a new step execution using the same writer instance.
+		// new step execution
 		writer.beforeStep(stepExecution);
 
-		var second = result("TXN007", RecordProcessingStatus.VALID);
+		TransactionProcessingResultDto second = result("TXN007", RecordProcessingStatus.VALID);
 
 		when(transactionRepository.findByTransactionIdInAndJobInstanceId(Set.of("TXN007"), 42L)).thenReturn(List.of());
 
@@ -259,23 +219,17 @@ class FirstCsvItemWriterTest {
 	}
 
 	@Test
-    void shouldSkipDatabaseLookupWhenNonInvalidResultHasNoTransaction()
-            throws Exception {
+	void shouldSkipDatabaseLookupWhenNonInvalidResultHasNoTransaction() throws Exception {
 
-        writer.beforeStep(stepExecution);
+		writer.beforeStep(stepExecution);
 
-        TransactionProcessingResultDto result =
-                new TransactionProcessingResultDto();
+		TransactionProcessingResultDto result = new TransactionProcessingResultDto();
 
-        result.setStatus(RecordProcessingStatus.VALID);
-        result.setTransaction(null);
+		result.setStatus(RecordProcessingStatus.VALID);
+		result.setTransaction(null);
 
-        assertThrows(
-                NullPointerException.class,
-                () -> writer.write(new Chunk<>(List.of(result)))
-        );
+		assertThrows(NullPointerException.class, () -> writer.write(new Chunk<>(List.of(result))));
 
-        verify(transactionRepository, never())
-                .findByTransactionIdInAndJobInstanceId(any(), any());
-    }
+		verify(transactionRepository, never()).findByTransactionIdInAndJobInstanceId(any(), any());
+	}
 }

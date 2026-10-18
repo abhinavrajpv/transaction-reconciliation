@@ -13,19 +13,15 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class FileValidationTasklet implements Tasklet {
-
 	private final FileValidationService validationService;
 	private final String filePath;
 
 	@Override
 	public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) {
-
 		String error = validationService.validateFile(filePath);
-
 		if (error != null) {
 			contribution.setExitStatus(ExitStatus.FAILED.addExitDescription(error));
 		}
-
 		return RepeatStatus.FINISHED;
 	}
 }

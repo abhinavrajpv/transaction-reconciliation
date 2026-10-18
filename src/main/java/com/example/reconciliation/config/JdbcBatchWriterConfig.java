@@ -13,8 +13,7 @@ import com.example.reconciliation.entity.TransactionRecord;
 public class JdbcBatchWriterConfig {
 
 	@Bean
-	public JdbcBatchItemWriter<TransactionRecord> transactionJdbcBatchWriter(DataSource dataSource) {
-
+	JdbcBatchItemWriter<TransactionRecord> transactionJdbcBatchWriter(DataSource dataSource) {
 		return new JdbcBatchItemWriterBuilder<TransactionRecord>().dataSource(dataSource).sql("""
 								INSERT INTO transaction_record (
 				    job_instance_id,

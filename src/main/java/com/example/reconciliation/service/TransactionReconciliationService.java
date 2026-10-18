@@ -17,18 +17,14 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class TransactionReconciliationService {
-
 	private final TransactionRepository transactionRepository;
 
 	public ReconciliationResultDto reconcile(SecondCsvRecordDto record, Long jobInstanceId) {
-
 		ReconciliationResultDto result = new ReconciliationResultDto();
 		result.setRowNumber(record.getRowNumber());
 		result.setTransactionId(record.getTransactionId());
-
 		TransactionRecord existing = transactionRepository
 				.findByTransactionIdAndJobInstanceId(record.getTransactionId().trim(), jobInstanceId).orElse(null);
-
 		if (existing == null) {
 			result.setStatus(ReconciliationStatus.MISSING_FROM_DATABASE);
 			result.setAction(ReconciliationAction.NOT_INSERTED);
@@ -36,14 +32,11 @@ public class TransactionReconciliationService {
 			result.setActualAmount(parseAmount(record.getAmount()));
 			return result;
 		}
-
 		BigDecimal databaseAmount = existing.getAmount();
 		BigDecimal sourceAmount = parseAmount(record.getAmount());
-
 		result.setExistingTransaction(existing);
 		result.setExpectedAmount(databaseAmount);
 		result.setActualAmount(sourceAmount);
-
 		if (databaseAmount.compareTo(sourceAmount) == 0) {
 			result.setStatus(ReconciliationStatus.MATCHED);
 			result.setAction(ReconciliationAction.NO_CHANGE);
@@ -53,7 +46,6 @@ public class TransactionReconciliationService {
 			result.setAction(ReconciliationAction.DATABASE_UPDATED);
 			result.setMessage("Transaction amount differs from source");
 		}
-
 		return result;
 	}
 

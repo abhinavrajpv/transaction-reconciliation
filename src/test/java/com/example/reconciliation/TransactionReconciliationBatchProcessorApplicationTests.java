@@ -18,9 +18,7 @@ class TransactionReconciliationBatchProcessorApplicationTests {
 	@Test
 	void mainShouldRunSpringApplication() {
 		try (MockedStatic<SpringApplication> mocked = mockStatic(SpringApplication.class)) {
-
 			assertDoesNotThrow(() -> TransactionReconciliationBatchProcessorApplication.main(new String[] {}));
-
 			mocked.verify(() -> SpringApplication.run(TransactionReconciliationBatchProcessorApplication.class,
 					new String[] {}));
 		}

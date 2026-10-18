@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 @Component
 @ConditionalOnProperty(name = "app.batch.launch-on-startup", havingValue = "true", matchIfMissing = true)
 public class JobLauncherRunner implements CommandLineRunner {
-
 	private final JobOperator jobOperator;
 	private final Job reconciliationJob;
 
@@ -23,16 +22,13 @@ public class JobLauncherRunner implements CommandLineRunner {
 
 	@Value("${reconciliation.first-file}")
 	private String firstFile;
-
 	@Value("${reconciliation.second-file}")
 	private String secondFile;
 
 	@Override
 	public void run(String... args) throws Exception {
-
-		JobParameters parameters = new JobParametersBuilder().addString("firstFile", firstFile) 
+		JobParameters parameters = new JobParametersBuilder().addString("firstFile", firstFile)
 				.addString("secondFile", secondFile).toJobParameters();
-
 		jobOperator.run(reconciliationJob, parameters);
 	}
 }
