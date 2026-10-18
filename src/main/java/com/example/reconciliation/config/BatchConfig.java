@@ -57,7 +57,7 @@ public class BatchConfig {
 		return new StepBuilder("ingestFirstFileStep", jobRepository)
 				.<FirstCsvRecordDto, Future<TransactionProcessingResultDto>>chunk(chunkSize)
 				.transactionManager(transactionManager).reader(firstCsvReader).processor(asyncFirstCsvProcessor)
-				.writer(asyncFirstCsvWriter).listener(firstCsvItemWriter).build();
+				.writer(asyncFirstCsvWriter).listener(firstCsvItemWriter).build();      
 	}
 
 	@Bean

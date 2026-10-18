@@ -13,7 +13,7 @@ import com.example.reconciliation.listener.BatchAuditJobListener;
 public class JobConfig {
 
 	@Bean
-	public Job transactionReconciliationJob(JobRepository jobRepository, Step validateFirstFileStep,
+	 Job transactionReconciliationJob(JobRepository jobRepository, Step validateFirstFileStep,
 			Step ingestFirstFileStep, Step validateSecondFileStep, Step reconcileSecondFileStep,
 			BatchAuditJobListener auditJobListener) {
 
@@ -22,4 +22,4 @@ public class JobConfig {
 				.next(validateSecondFileStep).on("FAILED").fail().from(validateSecondFileStep).on("*")
 				.to(reconcileSecondFileStep).end().build();
 	}
-}
+} 

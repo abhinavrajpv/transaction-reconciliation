@@ -42,19 +42,16 @@ public class ReconciliationItemWriter implements ItemWriter<ReconciliationResult
 	}
 
 	@Override
-	@Transactional
 	public void write(Chunk<? extends ReconciliationResultDto> chunk) throws IOException {
 		long matched = 0;
 		long mismatched = 0;
 		long missingFromDatabase = 0;
 
 		for (ReconciliationResultDto result : chunk) {
-
 			/*
 			 * if ("TXN001078".equals(result.getTransactionId())) { throw new
 			 * RuntimeException( "TEST FAILURE: Step 4 for TXN1006"); }
-			 */
-
+			 */	 
 			switch (result.getStatus()) {
 			case MATCHED ->matched++;
 			  

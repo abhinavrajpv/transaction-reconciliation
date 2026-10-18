@@ -26,7 +26,6 @@ public class BatchAuditJobListener implements JobExecutionListener {
 	private String secondFile;
 
 	@Override
-	@Transactional
 	public void beforeJob(JobExecution jobExecution) {
 
 		Long jobInstanceId = jobExecution.getJobInstance().getInstanceId();
@@ -56,7 +55,6 @@ public class BatchAuditJobListener implements JobExecutionListener {
 	}
 
 	@Override
-	@Transactional
 	public void afterJob(JobExecution jobExecution) {
 
 		Long jobInstanceId = jobExecution.getJobInstance().getInstanceId();

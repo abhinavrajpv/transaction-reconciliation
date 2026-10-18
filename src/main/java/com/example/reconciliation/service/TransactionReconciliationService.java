@@ -20,7 +20,6 @@ public class TransactionReconciliationService {
 
 	private final TransactionRepository transactionRepository;
 
-	@Transactional(readOnly = true)
 	public ReconciliationResultDto reconcile(SecondCsvRecordDto record, Long jobInstanceId) {
 
 		ReconciliationResultDto result = new ReconciliationResultDto();

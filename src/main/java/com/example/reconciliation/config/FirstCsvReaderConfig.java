@@ -58,7 +58,7 @@ public class FirstCsvReaderConfig {
 		lineMapper.setFieldSetMapper(fieldSet -> {
 			FirstCsvRecordDto dto = new FirstCsvRecordDto();
 			dto.setTransactionId(fieldSet.readString("transactionId"));
-			dto.setAccountNumber(fieldSet.readString("accountNumber"));
+			dto.setAccountNumber(fieldSet.readString("accountNumber"));  
 			dto.setTransactionDate(fieldSet.readString("transactionDate"));
 			dto.setAmount(fieldSet.readString("amount"));
 			dto.setCurrency(fieldSet.readString("currency"));
@@ -72,7 +72,7 @@ public class FirstCsvReaderConfig {
 				.lineMapper((line, lineNumber) -> {
 					FirstCsvRecordDto dto = lineMapper.mapLine(line, lineNumber);
 					dto.setRowNumber(lineNumber);
-					return dto;
-				}).build();
+					return dto;         
+				}).build();    
 	}
 }
