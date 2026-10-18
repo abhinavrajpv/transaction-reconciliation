@@ -55,6 +55,7 @@ public class FirstCsvItemWriter implements ItemWriter<TransactionProcessingResul
 
 	@Override
 	public void write(Chunk<? extends TransactionProcessingResultDto> chunk) throws Exception {
+		seenTransactionIds.clear();
 		long total = 0;
 		long invalid = 0;
 		long duplicate = 0;
@@ -74,10 +75,12 @@ public class FirstCsvItemWriter implements ItemWriter<TransactionProcessingResul
 			}
 			TransactionRecord transaction = result.getTransaction();
 			String transactionId = transaction.getTransactionId();
+			
 			/*
 			 * if ("TXN005912".equals(transactionId)) { throw new
 			 * RuntimeException("TEST FAILURE: Step 2"); }
 			 */
+			 
 			if (!seenTransactionIds.add(transactionId) || existingIds.contains(transactionId)) {
 				result.setStatus(RecordProcessingStatus.DUPLICATE);
 				result.setMessage("Transaction ID already exists");
