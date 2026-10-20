@@ -54,14 +54,14 @@ public class BatchConfig {
 				.<FirstCsvRecordDto, Future<TransactionProcessingResultDto>>chunk(chunkSize)
 				.transactionManager(transactionManager).reader(firstCsvReader).processor(asyncFirstCsvProcessor)
 				.writer(asyncFirstCsvWriter).listener(firstCsvItemWriter).build();      
-	}
+	}  
 
 	@Bean
 	Step validateSecondFileStep(JobRepository jobRepository, PlatformTransactionManager transactionManager,
 			FileValidationTasklet secondFileValidationTasklet) {
 		return new StepBuilder("validateSecondFileStep", jobRepository)
 				.tasklet(secondFileValidationTasklet, transactionManager).build();
-	}
+	} 
 
 	@Bean
 	Step reconcileSecondFileStep(JobRepository jobRepository, PlatformTransactionManager transactionManager,

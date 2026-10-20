@@ -21,4 +21,4 @@ public interface TransactionRepository extends JpaRepository<TransactionRecord, 
 
 	List<TransactionRecord> findByTransactionIdInAndJobInstanceId(Collection<String> transactionIds,
 			Long jobInstanceId);
-}
+}  

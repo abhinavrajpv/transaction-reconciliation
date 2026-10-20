@@ -28,7 +28,7 @@ public class ReconciliationResultsCsvWriter {
 		this.outputPath = Path.of(filePath);
 	}
 
-	public synchronized void initialize(Long jobExecutionId, Long jobInstanceId) throws IOException {
+	public void initialize(Long jobExecutionId, Long jobInstanceId) throws IOException {
 		this.jobExecutionId = jobExecutionId;
 		this.jobInstanceId = jobInstanceId;
 		Path parent = outputPath.getParent();
@@ -44,10 +44,10 @@ public class ReconciliationResultsCsvWriter {
 						CSVFormat.DEFAULT.builder().setHeader("job_execution_id", "job_instance_id", "row_number",
 								"transaction_id", "status", "action", "message", "expected_amount", "actual_amount")
 								.get())) {
-		}
+		} 
 	}
 
-	public synchronized void write(TransactionProcessingResultDto result) throws IOException {
+	public  void write(TransactionProcessingResultDto result) throws IOException {
 		FirstCsvRecordDto record = result.getOriginalRecord();
 		try (BufferedWriter writer = Files.newBufferedWriter(outputPath, StandardCharsets.UTF_8,
 				StandardOpenOption.CREATE, StandardOpenOption.APPEND);
@@ -59,7 +59,7 @@ public class ReconciliationResultsCsvWriter {
 		}
 	}
 
-	public synchronized void write(ReconciliationResultDto result) throws IOException {
+	public void write(ReconciliationResultDto result) throws IOException {
 		try (BufferedWriter writer = Files.newBufferedWriter(outputPath, StandardCharsets.UTF_8,
 				StandardOpenOption.CREATE, StandardOpenOption.APPEND);
 				CSVPrinter printer = new CSVPrinter(writer, CSVFormat.DEFAULT)) {

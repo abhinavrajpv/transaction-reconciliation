@@ -12,6 +12,8 @@ import java.util.Locale;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.example.reconciliation.constants.FileValidationMessages;
+
 @Service
 public class FileValidationService {
 
@@ -24,24 +26,24 @@ public class FileValidationService {
 	public String validateFile(String filePath) {
 		Path path = Path.of(filePath);
 		if (!Files.exists(path)) {
-			return "File does not exist";
+			return FileValidationMessages.FILE_DOES_NOT_EXIST;
 		}
 		if (!Files.isRegularFile(path)) {
-			return "Path is not a regular file";
+			return FileValidationMessages.PATH_NOT_REGULAR_FILE;
 		}
 		if (!Files.isReadable(path)) {
-			return "File is not readable";
+			return FileValidationMessages.FILE_NOT_READABLE;
 		}
 		if (!path.getFileName().toString().toLowerCase(Locale.ROOT).endsWith(".csv")) {
-			return "File must have a .csv extension";
+			return FileValidationMessages.INVALID_FILE_EXTENSION;
 		}
 		try {
 			long size = Files.size(path);
 			if (size > maxFileSize) {
-				return "File exceeds the configured size limit";
+				return FileValidationMessages.FILE_SIZE_EXCEEDED;
 			}
 			if (size == 0) {
-				return "File is empty";
+				return FileValidationMessages.FILE_EMPTY;
 			}
 			try (BufferedReader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
 				String header = reader.readLine();
@@ -49,13 +51,13 @@ public class FileValidationService {
 				 * if (header == null) { return "File is empty"; }
 				 */
 				if (header.isBlank()) {
-					return "CSV header is missing";
+					return FileValidationMessages.CSV_HEADER_MISSING;
 				}
 				header = header.replace("\uFEFF", "").trim();
 				List<String> actualHeaders = Arrays.stream(header.split(",", -1)).map(String::trim).toList();
 				List<String> expected = Arrays.stream(firstfileHeaders.split(",", -1)).map(String::trim).toList();
 				if (!actualHeaders.equals(expected)) {
-					return "CSV headers are missing, incorrect, or in the wrong order";
+					return FileValidationMessages.CSV_HEADERS_INVALID;
 				}
 				String firstRecord;
 				do {
@@ -63,12 +65,12 @@ public class FileValidationService {
 				} while (firstRecord != null && firstRecord.isBlank());
 
 				if (firstRecord == null) {
-					return "CSV contains no data records";
+					return FileValidationMessages.CSV_NO_DATA_RECORDS;
 				}
 			}
 
 		} catch (IOException ex) {
-			return "Unable to read file: " + ex.getMessage();
+			return FileValidationMessages.FILE_READ_ERROR_PREFIX + ex.getMessage();
 		}
 		return null;
 	}

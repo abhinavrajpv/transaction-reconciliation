@@ -7,6 +7,7 @@ import java.time.format.DateTimeParseException;
 import org.springframework.batch.infrastructure.item.ItemProcessor;
 import org.springframework.stereotype.Component;
 
+import com.example.reconciliation.constants.FileValidationMessages;
 import com.example.reconciliation.dto.FirstCsvRecordDto;
 import com.example.reconciliation.dto.TransactionProcessingResultDto;
 import com.example.reconciliation.entity.TransactionRecord;
@@ -41,36 +42,36 @@ public class FirstCsvRecordProcessor implements ItemProcessor<FirstCsvRecordDto,
 
 	private String validate(FirstCsvRecordDto record) {
 		if (record.getTransactionId() == null || record.getTransactionId().isBlank()) {
-			return "Transaction ID is required";
+			   return FileValidationMessages.TRANSACTION_ID_REQUIRED;
 		}
 		if (!record.getTransactionId().trim().matches("[A-Za-z0-9]+")) {
-		    return "Transaction ID must contain only letters and numbers";
+			 return FileValidationMessages.INVALID_TRANSACTION_ID_FORMAT;
 		}
 
 		if (record.getAccountNumber() == null || record.getAccountNumber().isBlank()) {
-			return "Account number is required";
+			return FileValidationMessages.ACCOUNT_NUMBER_REQUIRED;
 		}
 		if (!record.getAccountNumber().trim().matches("[A-Za-z0-9]{8}")) {
-		    return "Account number must contain exactly 8 letters or digits";
+			 return FileValidationMessages.INVALID_ACCOUNT_NUMBER_FORMAT;
 		}
 
 		if (record.getTransactionDate() == null || record.getTransactionDate().isBlank()) {
-			return "Transaction date is required";
+			return FileValidationMessages.TRANSACTION_DATE_REQUIRED;
 		}
 
 		if (record.getAmount() == null || record.getAmount().isBlank()) {    
-			return "Amount is required";
+			  return FileValidationMessages.AMOUNT_REQUIRED;
 		}
 
 		if (record.getCurrency() == null || record.getCurrency().isBlank()) {
-			return "Currency is required";
-		}
+			 return FileValidationMessages.CURRENCY_REQUIRED;
+		}       
 		if (!record.getCurrency().trim().matches("[A-Za-z]{3}")) {
-		    return "Currency must contain exactly 3 letters";
+			 return FileValidationMessages.INVALID_CURRENCY_FORMAT;
 		}
 
 		if (record.getTransactionType() == null || record.getTransactionType().isBlank()) {
-			return "Transaction type is required";
+			   return FileValidationMessages.TRANSACTION_TYPE_REQUIRED;
 		}
 
 		try {
@@ -79,13 +80,13 @@ public class FirstCsvRecordProcessor implements ItemProcessor<FirstCsvRecordDto,
 			BigDecimal amount = new BigDecimal(record.getAmount().trim());
 
 			if (amount.signum() < 0) {
-				return "Amount cannot be negative";
+			     return FileValidationMessages.NEGATIVE_AMOUNT;
 			}
 
 		} catch (DateTimeParseException ex) {
-			return "Transaction date must use yyyy-MM-dd format";
+			   return FileValidationMessages.INVALID_TRANSACTION_DATE_FORMAT;
 		} catch (NumberFormatException ex) {
-			return "Amount must be a valid number";
+			  return FileValidationMessages.INVALID_AMOUNT;
 		}
 		return null;
 	}
